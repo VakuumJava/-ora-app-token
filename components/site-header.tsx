@@ -5,7 +5,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
 import { User, LogOut, Wallet } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import { WalletConnectModal } from "@/components/wallet-connect-modal"
 
 export function SiteHeader() {
@@ -14,6 +14,8 @@ export function SiteHeader() {
   const [isLoading, setIsLoading] = useState(true)
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false)
   const router = useRouter()
+  const pathname = usePathname()
+  const isMainPage = pathname === '/'
 
   useEffect(() => {
     const handleScroll = () => {
@@ -58,20 +60,20 @@ export function SiteHeader() {
       isScrolled ? 'bg-black/50' : 'bg-black/30'
     }`}>
       <div className={`mx-auto flex max-w-[1920px] items-center justify-between px-6 md:px-12 transition-all duration-300 ${
-        isScrolled ? 'h-16' : 'h-20'
+        isMainPage && !isScrolled ? 'h-20' : 'h-16'
       }`}>
         {/* Logo */}
         <Link href="/" className={`flex items-center gap-3 hover:opacity-80 transition-all duration-300 ${
-          isScrolled ? 'scale-90' : 'scale-100'
+          isMainPage && !isScrolled ? 'scale-100' : 'scale-90'
         }`}>
           <div className={`relative transition-all duration-300 ${
-            isScrolled ? 'w-[30px] h-[35px]' : 'w-[37px] h-[43px]'
+            isMainPage && !isScrolled ? 'w-[37px] h-[43px]' : 'w-[30px] h-[35px]'
           }`}>
             <Image src="/Logo.svg" alt="Qora" width={37} height={43} className="object-contain" />
           </div>
           <span
             className={`text-white font-normal transition-all duration-300 ${
-              isScrolled ? 'text-[28px] md:text-[32px]' : 'text-[32px] md:text-[40px]'
+              isMainPage && !isScrolled ? 'text-[32px] md:text-[40px]' : 'text-[28px] md:text-[32px]'
             }`}
             style={{ fontFamily: "'MuseoModerno', sans-serif" }}
           >
