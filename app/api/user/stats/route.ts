@@ -1,28 +1,22 @@
-import { NextRequest, NextResponse } from 'next/server'
-import jwt from 'jsonwebtoken'
-import { PrismaClient } from '@prisma/client'
+import { NextResponse } from 'next/server'
+import { prisma } from '@/lib/db'
+import { getCurrentUser } from '@/lib/jwt'
 
-const prisma = new PrismaClient()
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this'
-
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    // Получаем токен из куки
-    const token = request.cookies.get('access_token')?.value
+    // Получаем текущего пользователя
+    const user = await getCurrentUser()
 
-    if (!token) {
+    if (!user) {
       return NextResponse.json(
         { error: 'Не авторизован' },
         { status: 401 }
       )
     }
 
-    // Проверяем токен
-    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string }
-
-    // Получаем данные пользователя
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
+    // Получаем данные пользователя из базы
+    const userData = await prisma.user.findUnique({
+      where: { id: user.userId },
       select: {
         id: true,
         createdAt: true,
@@ -31,7 +25,7 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    if (!user) {
+    if (!userData) {
       return NextResponse.json(
         { error: 'Пользователь не найден' },
         { status: 404 }
@@ -40,25 +34,18 @@ export async function GET(request: NextRequest) {
 
     // Вычисляем количество дней на сайте
     const now = new Date()
-    const createdAt = new Date(user.createdAt)
+    const createdAt = new Date(userData.createdAt)
     const daysOnSite = Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24))
 
     // Возвращаем статистику
     return NextResponse.json({
       daysOnSite,
-      shardsFound: user.totalShards || 0,
-      cardsOwned: user.totalCards || 0,
+      shardsFound: userData.totalShards || 0,
+      cardsOwned: userData.totalCards || 0,
     })
 
   } catch (error: any) {
     console.error('Ошибка получения статистики:', error)
-    
-    if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
-      return NextResponse.json(
-        { error: 'Невалидный токен' },
-        { status: 401 }
-      )
-    }
 
     return NextResponse.json(
       { error: 'Ошибка сервера' },
