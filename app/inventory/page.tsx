@@ -195,10 +195,10 @@ export default function InventoryPage() {
       {/* Hero Section */}
       <section className="pt-32 pb-16 relative z-10 px-6">
         <div className="max-w-7xl mx-auto text-center">
-          <h1 className="text-6xl font-bold mb-6 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+          <h1 className="text-6xl font-bold mb-6 text-white/90">
             Здесь хранятся ваши активы
           </h1>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed">
             Всего предметов: {(inventory?.fragments.total || 0) + (inventory?.cards.total || 0)}
           </p>
         </div>
@@ -277,13 +277,13 @@ export default function InventoryPage() {
         <section className="py-32 relative z-10 px-6">
           <div className="max-w-2xl mx-auto text-center">
             <div className="mb-8">
-              {/* TGS Animation - используем dangerouslySetInnerHTML для обхода TypeScript */}
+              {/* Lottie Animation - используем JSON версию */}
               <div 
                 className="w-48 h-48 mx-auto mb-8"
                 dangerouslySetInnerHTML={{
                   __html: `
                     <dotlottie-player
-                      src="/LootBagQora.tgs"
+                      src="/LootBag.json"
                       background="transparent"
                       speed="1"
                       style="width: 100%; height: 100%;"
