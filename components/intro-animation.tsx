@@ -9,7 +9,7 @@ interface IntroAnimationProps {
 export function IntroAnimation({ onComplete }: IntroAnimationProps) {
   const [text, setText] = useState('')
   const [isDissolving, setIsDissolving] = useState(false)
-  const fullText = 'Простая игра...\nНо цифровизация'
+  const fullText = 'Простая игра...\nНо цифровизация всего мира'
   const [isReady, setIsReady] = useState(false)
 
   useEffect(() => {
