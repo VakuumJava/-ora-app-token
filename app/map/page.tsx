@@ -56,9 +56,59 @@ export default function MapPage() {
 
   return (
     <div className="flex h-screen flex-col bg-black">
+      <style jsx global>{`
+        @keyframes slideUp {
+          from {
+            opacity: 0;
+            transform: translate(-50%, 20px);
+          }
+          to {
+            opacity: 1;
+            transform: translate(-50%, 0);
+          }
+        }
+        
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+        
+        @keyframes slideDown {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        .animate-slide-up {
+          animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        
+        .animate-fade-in {
+          animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        
+        .animate-slide-down {
+          animation: slideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        
+        .transition-smooth {
+          transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+      `}</style>
       <SiteHeader />
       
-      <div className="flex items-center justify-between gap-3 border-b border-white/10 bg-black/80 px-6 py-3 backdrop-blur-xl z-[1000]">
+      <div className="flex items-center justify-between gap-3 border-b border-white/10 bg-black/80 px-6 py-3 backdrop-blur-xl z-[1000] animate-slide-down">
         <h1 className="text-xl font-semibold text-white flex items-center gap-2">
           <MapPin className="h-5 w-5" />
           Карта фрагментов
@@ -68,7 +118,7 @@ export default function MapPage() {
             variant="outline" 
             size="sm" 
             onClick={() => setSelectedChain(null)}
-            className={selectedChain === null ? "bg-blue-500/20 text-blue-300" : ""}
+            className={`transition-smooth ${selectedChain === null ? "bg-blue-500/20 text-blue-300" : ""}`}
           >
             Все
           </Button>
@@ -78,7 +128,7 @@ export default function MapPage() {
               variant="outline" 
               size="sm" 
               onClick={() => setSelectedChain(chain)}
-              className={selectedChain === chain ? "bg-blue-500/20 text-blue-300" : ""}
+              className={`transition-smooth ${selectedChain === chain ? "bg-blue-500/20 text-blue-300" : ""}`}
             >
               {chain}
             </Button>
@@ -94,38 +144,38 @@ export default function MapPage() {
         />
         
         {selectedFragment && (
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-full max-w-md rounded-2xl border border-white/10 bg-black/90 backdrop-blur-2xl p-6 z-[1000]">
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-full max-w-md rounded-2xl border border-white/10 bg-black/90 backdrop-blur-2xl p-6 z-[1000] animate-slide-up shadow-2xl">
             <button 
               onClick={() => setSelectedFragment(null)}
-              className="absolute right-4 top-4 text-gray-400 hover:text-white"
+              className="absolute right-4 top-4 text-gray-400 hover:text-white transition-smooth hover:scale-110"
             >
               <X className="h-4 w-4" />
             </button>
             
-            <div className="text-xs text-gray-400 mb-1">{selectedFragment.chain}</div>
-            <h3 className="text-xl font-bold text-white mb-3">{selectedFragment.name}</h3>
+            <div className="text-xs text-gray-400 mb-1 animate-fade-in">{selectedFragment.chain}</div>
+            <h3 className="text-xl font-bold text-white mb-3 animate-fade-in" style={{ animationDelay: '0.05s' }}>{selectedFragment.name}</h3>
             
-            <div className="flex gap-2 mb-4">
+            <div className="flex gap-2 mb-4 animate-fade-in" style={{ animationDelay: '0.1s' }}>
               <span 
-                className="rounded-full px-3 py-1 text-xs font-semibold text-white"
+                className="rounded-full px-3 py-1 text-xs font-semibold text-white transition-smooth hover:scale-105"
                 style={{ background: fragmentColors[selectedFragment.fragment] }}
               >
                 Фрагмент {selectedFragment.fragment}
               </span>
               <span 
-                className="rounded-full px-3 py-1 text-xs font-semibold text-white"
+                className="rounded-full px-3 py-1 text-xs font-semibold text-white transition-smooth hover:scale-105"
                 style={{ background: rarityColors[selectedFragment.rarity] }}
               >
                 {selectedFragment.rarity}
               </span>
             </div>
             
-            <div className="space-y-2 text-sm text-gray-300">
+            <div className="space-y-2 text-sm text-gray-300 animate-fade-in" style={{ animationDelay: '0.15s' }}>
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-blue-400" />
                 <span>{selectedFragment.lat.toFixed(4)}, {selectedFragment.lng.toFixed(4)}</span>
               </div>
-              <div className="mt-3 rounded-lg bg-blue-500/10 border border-blue-500/20 p-3">
+              <div className="mt-3 rounded-lg bg-blue-500/10 border border-blue-500/20 p-3 transition-smooth hover:bg-blue-500/15">
                 <div className="text-xs text-blue-300 mb-1">Требования для чекина:</div>
                 <div className="text-xs text-gray-400">• Радиус: 5 метров</div>
                 <div className="text-xs text-gray-400">• Удержание: 3 секунды</div>
@@ -133,7 +183,7 @@ export default function MapPage() {
             </div>
             
             {selectedFragment.available && (
-              <Button className="w-full mt-4 bg-blue-600 hover:bg-blue-700">
+              <Button className="w-full mt-4 bg-blue-600 hover:bg-blue-700 transition-smooth hover:scale-[1.02] animate-fade-in" style={{ animationDelay: '0.2s' }}>
                 Начать чекин
               </Button>
             )}
