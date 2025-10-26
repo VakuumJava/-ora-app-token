@@ -995,7 +995,7 @@ export default function MapPage() {
                   <h3 className="text-xl font-bold text-white">{selectedFragment.name}</h3>
                   <div className="mt-3 flex items-center gap-2">
                     <span
-                      className="rounded-full px-3 py-1 text-xs font-bold text-white shadow-lg"
+                      className="rounded-full px-3 py-1 text-xs font-semibold text-white shadow-lg"
                       style={{ background: fragmentColors[selectedFragment.fragment as keyof typeof fragmentColors] }}
                     >
                       Фрагмент {selectedFragment.fragment}
@@ -1003,43 +1003,44 @@ export default function MapPage() {
                     <span
                       className="rounded-full px-3 py-1 text-xs font-semibold text-white shadow-lg"
                       style={{ background: rarityColors[selectedFragment.rarity as keyof typeof rarityColors] }}
-                  >
-                    {selectedFragment.rarity}
-                  </span>
+                    >
+                      {selectedFragment.rarity}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="mb-4 space-y-2 text-sm text-gray-300">
-              <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-blue-400" />
-                <span>
-                  {selectedFragment.lat.toFixed(4)}, {selectedFragment.lng.toFixed(4)}
-                </span>
+              <div className="mb-4 space-y-2 text-sm text-gray-300">
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-blue-400" />
+                  <span>
+                    {selectedFragment.lat.toFixed(4)}, {selectedFragment.lng.toFixed(4)}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-blue-400" />
+                  <span>{selectedFragment.available ? "Доступно сейчас" : "Уже собрано"}</span>
+                </div>
+                <div className="mt-3 rounded-lg bg-blue-500/10 border border-blue-500/20 p-3">
+                  <div className="text-xs text-blue-300 mb-1">Требования для чекина:</div>
+                  <div className="text-xs text-gray-400">• Радиус: 5 метров</div>
+                  <div className="text-xs text-gray-400">• Удержание: 3 секунды</div>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-blue-400" />
-                <span>{selectedFragment.available ? "Доступно сейчас" : "Уже собрано"}</span>
-              </div>
-              <div className="mt-3 rounded-lg bg-blue-500/10 border border-blue-500/20 p-3">
-                <div className="text-xs text-blue-300 mb-1">Требования для чекина:</div>
-                <div className="text-xs text-gray-400">• Радиус: 5 метров</div>
-                <div className="text-xs text-gray-400">• Удержание: 3 секунды</div>
-              </div>
-            </div>
 
-            {selectedFragment.available ? (
-              <Link href={`/checkin/${selectedFragment.id}`}>
-                <Button className="w-full bg-gradient-to-r from-blue-500 to-cyan-400 text-white hover:from-blue-600 hover:to-cyan-500">
-                  <Navigation className="mr-2 h-4 w-4" />
-                  Начать чекин
+              {selectedFragment.available ? (
+                <Link href={`/checkin/${selectedFragment.id}`}>
+                  <Button className="w-full bg-gradient-to-r from-blue-500 to-cyan-400 text-white hover:from-blue-600 hover:to-cyan-500">
+                    <Navigation className="mr-2 h-4 w-4" />
+                    Начать чекин
+                  </Button>
+                </Link>
+              ) : (
+                <Button disabled className="w-full" variant="secondary">
+                  Уже собрано
                 </Button>
-              </Link>
-            ) : (
-              <Button disabled className="w-full" variant="secondary">
-                Уже собрано
-              </Button>
-            )}
+              )}
+            </div>
           </div>
         )}
 
