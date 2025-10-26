@@ -42,6 +42,7 @@ export default function MapPage() {
     { id: "3", lat: 42.8653, lng: 74.5847, fragment: "C", rarity: "Epic", chain: "BASE", name: "Дубовый парк", available: false },
     { id: "4", lat: 42.8432, lng: 74.5856, fragment: "D", rarity: "Legendary", chain: "TON", name: "ТРЦ Асия Молл", available: true },
     { id: "5", lat: 42.8587, lng: 74.6169, fragment: "E", rarity: "Rare", chain: "ETH", name: "Парк имени Панфилова", available: true },
+    { id: "6", lat: 42.8676, lng: 74.5874, fragment: "A", rarity: "Epic", chain: "BASE", name: "Технопарк", available: true },
   ]
 
   const fragmentColors: Record<Fragment, string> = {
@@ -91,7 +92,7 @@ export default function MapPage() {
     if (!window.ymaps || !mapContainer.current || mapInstance.current) return
     window.ymaps.ready(() => {
       const startCenter = [42.875964, 74.603701]
-      mapInstance.current = new window.ymaps.Map(mapContainer.current, { center: startCenter, zoom: 12, type: 'yandex#map', controls: ['zoomControl'] })
+      mapInstance.current = new window.ymaps.Map(mapContainer.current, { center: startCenter, zoom: 12, type: 'yandex#dark', controls: ['zoomControl'] })
       setIsLoading(false)
       filteredFragments.forEach((spawn) => {
         const placemark = new window.ymaps.Placemark(
@@ -114,7 +115,16 @@ export default function MapPage() {
         if (userPlacemark.current) {
           userPlacemark.current.geometry.setCoordinates(coords)
         } else {
-          userPlacemark.current = new window.ymaps.Placemark(coords, { hintContent: 'Вы здесь', balloonContent: 'Моё местоположение' }, { preset: 'islands#blueCircleDotIcon' })
+          userPlacemark.current = new window.ymaps.Placemark(
+            coords, 
+            { hintContent: 'Вы здесь', balloonContent: '<div style="padding: 8px;"><strong>📍 Ваша локация</strong><br/>Вы находитесь здесь</div>' }, 
+            { 
+              iconLayout: 'default#image',
+              iconImageHref: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIxOCIgZmlsbD0iIzM4OGFFOCIgZmlsbC1vcGFjaXR5PSIwLjMiLz4KICA8Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIxMiIgZmlsbD0iIzM4OGFFOCIvPgogIDxjaXJjbGUgY3g9IjIwIiBjeT0iMjAiIHI9IjYiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPgo=',
+              iconImageSize: [40, 40],
+              iconImageOffset: [-20, -20]
+            }
+          )
           mapInstance.current?.geoObjects.add(userPlacemark.current)
         }
         mapInstance.current?.setCenter(coords, 15)
@@ -132,7 +142,7 @@ export default function MapPage() {
 
   const changeMapType = (type: 'map' | 'satellite' | 'hybrid') => {
     if (!mapInstance.current) return
-    const typeMap = { map: 'yandex#map', satellite: 'yandex#satellite', hybrid: 'yandex#hybrid' }
+    const typeMap = { map: 'yandex#dark', satellite: 'yandex#satellite', hybrid: 'yandex#hybrid' }
     mapInstance.current.setType(typeMap[type])
     setMapType(type)
   }
