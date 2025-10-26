@@ -28,6 +28,8 @@ declare global {
 }
 
 export default function MapPage() {
+  console.log('🎯 MapPage component rendering')
+  
   const mapContainer = useRef<HTMLDivElement>(null)
   const mapInstance = useRef<any>(null)
   const userPlacemark = useRef<any>(null)
@@ -35,6 +37,8 @@ export default function MapPage() {
   const [selectedChain, setSelectedChain] = useState<Chain | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [mapType, setMapType] = useState<'map' | 'satellite' | 'hybrid'>('map')
+  
+  console.log('📊 Component state:', { isLoading, selectedChain, mapType })
 
   const fragmentSpawns: FragmentSpawn[] = [
     { id: "1", lat: 42.8746, lng: 74.5698, fragment: "A", rarity: "Common", chain: "TON", name: "Ошская — площадь Ала-Тоо", available: true },
