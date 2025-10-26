@@ -57,37 +57,6 @@ export default function MapPage() {
     ? fragmentSpawns.filter((frag) => frag.chain === selectedChain)
     : fragmentSpawns
 
-  useEffect(() => {
-    const script = document.createElement('script')
-    script.src = 'https://api-maps.yandex.ru/2.1/?lang=ru_RU'
-    script.async = true
-    script.onload = () => initMap()
-    document.head.appendChild(script)
-    return () => {
-      if (document.head.contains(script)) {
-        document.head.removeChild(script)
-      }
-    }
-  }, [])
-
-  useEffect(() => {
-    if (mapInstance.current && window.ymaps) {
-      mapInstance.current.geoObjects.removeAll()
-      if (userPlacemark.current) {
-        mapInstance.current.geoObjects.add(userPlacemark.current)
-      }
-      filteredFragments.forEach((spawn) => {
-        const placemark = new window.ymaps.Placemark(
-          [spawn.lat, spawn.lng],
-          { hintContent: spawn.name, balloonContent: `<div style="padding: 8px;"><strong>${spawn.name}</strong><br/>Фрагмент ${spawn.fragment} • ${spawn.rarity}<br/><span style="color: ${spawn.available ? '#10b981' : '#ef4444'}">${spawn.available ? 'Доступно' : 'Собрано'}</span></div>` },
-          { preset: 'islands#circleDotIcon', iconColor: fragmentColors[spawn.fragment] }
-        )
-        placemark.events.add('click', () => { setSelectedFragment(spawn) })
-        mapInstance.current.geoObjects.add(placemark)
-      })
-    }
-  }, [selectedChain, filteredFragments])
-
   const initMap = () => {
     if (!window.ymaps || !mapContainer.current || mapInstance.current) return
     window.ymaps.ready(() => {
@@ -146,6 +115,41 @@ export default function MapPage() {
     mapInstance.current.setType(typeMap[type])
     setMapType(type)
   }
+
+  useEffect(() => {
+    const script = document.createElement('script')
+    script.src = 'https://api-maps.yandex.ru/2.1/?lang=ru_RU'
+    script.async = true
+    script.onload = () => {
+      if (window.ymaps && mapContainer.current) {
+        initMap()
+      }
+    }
+    document.head.appendChild(script)
+    return () => {
+      if (document.head.contains(script)) {
+        document.head.removeChild(script)
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    if (mapInstance.current && window.ymaps) {
+      mapInstance.current.geoObjects.removeAll()
+      if (userPlacemark.current) {
+        mapInstance.current.geoObjects.add(userPlacemark.current)
+      }
+      filteredFragments.forEach((spawn) => {
+        const placemark = new window.ymaps.Placemark(
+          [spawn.lat, spawn.lng],
+          { hintContent: spawn.name, balloonContent: `<div style="padding: 8px;"><strong>${spawn.name}</strong><br/>Фрагмент ${spawn.fragment} • ${spawn.rarity}<br/><span style="color: ${spawn.available ? '#10b981' : '#ef4444'}">${spawn.available ? 'Доступно' : 'Собрано'}</span></div>` },
+          { preset: 'islands#circleDotIcon', iconColor: fragmentColors[spawn.fragment] }
+        )
+        placemark.events.add('click', () => { setSelectedFragment(spawn) })
+        mapInstance.current.geoObjects.add(placemark)
+      })
+    }
+  }, [selectedChain, filteredFragments])
 
   return (
     <div className="flex h-screen flex-col bg-black relative overflow-hidden">
