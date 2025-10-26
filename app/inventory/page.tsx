@@ -277,18 +277,29 @@ export default function InventoryPage() {
         <section className="py-32 relative z-10 px-6">
           <div className="max-w-2xl mx-auto text-center">
             <div className="mb-8">
-              <div className="w-32 h-32 mx-auto mb-6 rounded-full bg-white/5 flex items-center justify-center">
-                <svg className="w-16 h-16 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                </svg>
-              </div>
-              <h2 className="text-4xl font-bold mb-4 text-white">У вас пока нет предметов</h2>
-              <p className="text-xl text-gray-400 mb-8">
+              {/* TGS Animation - используем dangerouslySetInnerHTML для обхода TypeScript */}
+              <div 
+                className="w-48 h-48 mx-auto mb-8"
+                dangerouslySetInnerHTML={{
+                  __html: `
+                    <dotlottie-player
+                      src="/LootBagQora.tgs"
+                      background="transparent"
+                      speed="1"
+                      style="width: 100%; height: 100%;"
+                      loop
+                      autoplay
+                    ></dotlottie-player>
+                  `
+                }}
+              />
+              <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white/90">У вас пока нет предметов</h2>
+              <p className="text-lg md:text-xl text-gray-500 mb-8">
                 Начните исследовать карту и собирать осколки, чтобы создавать уникальные NFT-карты
               </p>
               <button
                 onClick={() => router.push('/map')}
-                className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105"
+                className="px-8 py-4 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 text-white"
               >
                 Перейти на карту
               </button>

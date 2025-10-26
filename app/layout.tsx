@@ -35,6 +35,11 @@ export default function RootLayout({
           crossOrigin=""
           strategy="beforeInteractive"
         />
+        <Script
+          src="https://unpkg.com/@dotlottie/player-component@latest/dist/dotlottie-player.mjs"
+          type="module"
+          strategy="beforeInteractive"
+        />
       </head>
       <body className={`font-sans antialiased`}>
         <TonConnectProvider>

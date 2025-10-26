@@ -90,7 +90,7 @@ export function WalletConnectModal({ isOpen, onClose }: WalletConnectModalProps)
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md border-white/10 bg-black/90 backdrop-blur-xl relative z-[10000]">
+      <DialogContent className="sm:max-w-md border-white/10 bg-black/90 backdrop-blur-xl">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-white flex items-center gap-3">
             <Wallet className="h-7 w-7 text-blue-400" />
@@ -101,7 +101,7 @@ export function WalletConnectModal({ isOpen, onClose }: WalletConnectModalProps)
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 mt-6 relative z-10">
+        <div className="space-y-4 mt-6">
           {isTonConnected ? (
             <div className="flex items-center justify-between rounded-2xl border border-[#0088CC]/30 bg-[#0088CC]/10 p-4">
               <div className="flex items-center gap-3">
@@ -119,7 +119,7 @@ export function WalletConnectModal({ isOpen, onClose }: WalletConnectModalProps)
                 onClick={disconnectTonWallet}
                 variant="outline"
                 size="sm"
-                className="border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 relative z-10"
+                className="border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20"
               >
                 Отключить
               </Button>
@@ -128,7 +128,7 @@ export function WalletConnectModal({ isOpen, onClose }: WalletConnectModalProps)
             <Button
               onClick={connectTonWallet}
               disabled={isConnecting}
-              className="w-full rounded-2xl border border-[#0088CC]/30 bg-[#0088CC]/10 py-6 text-white transition-all hover:bg-[#0088CC]/20 relative z-10 cursor-pointer"
+              className="w-full rounded-2xl border border-[#0088CC]/30 bg-[#0088CC]/10 py-6 text-white transition-all hover:bg-[#0088CC]/20"
             >
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#0088CC]/20">
@@ -157,7 +157,7 @@ export function WalletConnectModal({ isOpen, onClose }: WalletConnectModalProps)
                 onClick={disconnectEthereumWallet}
                 variant="outline"
                 size="sm"
-                className="border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 relative z-10"
+                className="border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20"
               >
                 Отключить
               </Button>
@@ -166,7 +166,7 @@ export function WalletConnectModal({ isOpen, onClose }: WalletConnectModalProps)
             <Button
               onClick={connectEthereumWallet}
               disabled={isConnecting}
-              className="w-full rounded-2xl border border-[#627EEA]/30 bg-[#627EEA]/10 py-6 text-white transition-all hover:bg-[#627EEA]/20 relative z-10 cursor-pointer"
+              className="w-full rounded-2xl border border-[#627EEA]/30 bg-[#627EEA]/10 py-6 text-white transition-all hover:bg-[#627EEA]/20"
             >
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#627EEA]/20">
@@ -181,7 +181,7 @@ export function WalletConnectModal({ isOpen, onClose }: WalletConnectModalProps)
           )}
         </div>
 
-        <p className="mt-6 text-center text-xs text-white/40 relative z-10">
+        <p className="mt-6 text-center text-xs text-white/40">
           Ваши кошельки будут использоваться для покупки и продажи NFT
         </p>
       </DialogContent>

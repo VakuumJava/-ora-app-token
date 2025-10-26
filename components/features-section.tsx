@@ -1,25 +1,9 @@
 "use client"
 
 import { FadeIn } from "@/components/fade-in"
-import { useState, useEffect } from "react"
-import { ArrowUp, LifeBuoy } from "lucide-react"
+import { LifeBuoy } from "lucide-react"
 
 export function FeaturesSection() {
-  const [showScrollTop, setShowScrollTop] = useState(false)
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 500)
-    }
-
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" })
-  }
-
   const features = [
     {
       number: "01",
@@ -110,29 +94,6 @@ export function FeaturesSection() {
             </div>
           </FadeIn>
         ))}
-      </div>
-
-      {/* Кнопка скролла вверх */}
-      <div className="flex justify-center mt-12">
-        <button
-          onClick={scrollToTop}
-          className={`glass-button-combined transition-all duration-500 ${
-            showScrollTop ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-          }`}
-        >
-          <div className="glass-icon-circle">
-            <svg width="28" height="28" viewBox="0 0 65 65" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="32.5" cy="32.5" r="14.125" stroke="#2A303B" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M42.25 22.75L36.5219 28.4781M36.5219 28.4781C38.7124 30.6702 38.7124 34.3314 36.5219 36.5219M36.5219 28.4781C34.3314 26.2876 30.6702 26.2876 28.4781 28.4781M22.75 42.25L28.4781 36.5219M28.4781 36.5219C26.2876 34.3314 26.2876 30.6702 28.4781 28.4781M28.4781 36.5219C30.6686 38.7124 34.3298 38.7124 36.5219 36.5219M22.75 22.75L28.4781 28.4781M42.25 42.25L36.5219 36.5219" stroke="#2A303B" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
-          <div className="glass-text-section">
-            <ArrowUp className="w-3.5 h-3.5 text-white/90 mr-1.5" strokeWidth={2.5} />
-            <span className="text-white/90 text-[13px] font-medium" style={{ fontFamily: "'Inter', sans-serif" }}>
-              Наверх
-            </span>
-          </div>
-        </button>
       </div>
 
       <style jsx>{`
