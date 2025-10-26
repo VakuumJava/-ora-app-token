@@ -1,0 +1,74 @@
+import Image from "next/image"
+import { Card, CardContent } from "@/components/ui/card"
+import { FadeIn } from "@/components/fade-in"
+
+const steps = [
+  {
+    icon: "/icons/location-pin.png",
+    title: "Найди на карте",
+    description: "Открой карту на нашем сайте и найди ближайшие точки дропа NFT"
+  },
+  {
+    icon: "/icons/sparkles.png",
+    title: "Приди и забери",
+    description: "Дойди до локации, остановись на 3 секунды, подожди чек-ин и получи уникальный NFT себе в коллекцию"
+  },
+  {
+    icon: "/icons/trophy.png",
+    title: "Собери и продай",
+    description: "Собирай цепочки, апгрейдь карточки и торгуй на маркетплейсе"
+  }
+]
+
+export function HowItWorks() {
+  return (
+    <section className="relative py-12">
+      <div className="relative mx-auto max-w-6xl px-6">
+        <FadeIn delay={0.2} duration={0.8}>
+          <h2 
+            className="mb-12 text-center text-3xl font-bold text-white"
+            style={{
+              fontFamily: "'Space Grotesk', sans-serif",
+              letterSpacing: "-0.5px",
+            }}
+          >
+            Как это работает
+          </h2>
+        </FadeIn>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 justify-items-center">
+          {steps.map((step, index) => (
+            <FadeIn key={index} delay={0.3 + index * 0.15} duration={0.8}>
+              <Card
+                className="w-full max-w-[320px] h-[240px] rounded-[28px] border backdrop-blur-md hover:backdrop-blur-lg transition-all duration-300"
+                style={{
+                  background: "rgba(0, 68, 255, 0.08)",
+                  borderColor: "rgba(0, 136, 255, 0.3)",
+                  boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.37)",
+                }}
+              >
+              <CardContent className="p-6 pt-6 flex flex-col h-full">
+                <div className="mb-4 w-12 h-12 flex-shrink-0 rounded-full bg-blue-500/20 flex items-center justify-center backdrop-blur-sm">
+                  <Image src={step.icon} alt={step.title} width={24} height={24} className="object-contain" />
+                </div>
+                <h3 
+                  className="mb-3 text-lg font-bold text-white"
+                  style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                >
+                  {step.title}
+                </h3>
+                <p 
+                  className="text-sm leading-relaxed text-white/70"
+                  style={{ fontFamily: "'Inter', sans-serif" }}
+                >
+                  {step.description}
+                </p>
+              </CardContent>
+            </Card>
+            </FadeIn>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}

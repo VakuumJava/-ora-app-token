@@ -1,0 +1,289 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =====================================================
+// USER MODEL - основная таблица пользователей
+// =====================================================
+model User {
+  id              String   @id @default(uuid())
+  email           String   @unique
+  nickname        String   @unique // УНИКАЛЬНЫЙ nickname!
+  passwordHash    String   @map("password_hash")
+  avatarUrl       String?  @map("avatar_url")
+  bio             String?
+  walletAddress   String?  @map("wallet_address")
+  
+  // Счетчики
+  totalShards     Int      @default(0) @map("total_shards")
+  totalCards      Int      @default(0) @map("total_cards")
+  
+  // Метаданные
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  lastLoginAt     DateTime? @map("last_login_at")
+  
+  // Связи
+  shards          UserShard[]
+  cards           UserCard[]
+  listings        Listing[]
+  adminRole       AdminRole?
+  
+  @@map("users")
+  @@index([email])
+  @@index([nickname])
+}
+
+// =====================================================
+// COLLECTIONS - коллекции NFT
+// =====================================================
+model Collection {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  imageUrl    String?  @map("image_url")
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  cards       Card[]
+  
+  @@map("collections")
+}
+
+// =====================================================
+// CARDS - карточки NFT
+// =====================================================
+model Card {
+  id            String     @id @default(uuid())
+  collectionId  String     @map("collection_id")
+  name          String
+  description   String?
+  imageUrl      String?    @map("image_url")
+  rarity        String     // common, uncommon, rare, epic, legendary
+  supplyLimit   Int?       @map("supply_limit")
+  mintedCount   Int        @default(0) @map("minted_count")
+  active        Boolean    @default(true)
+  createdAt     DateTime   @default(now()) @map("created_at")
+  updatedAt     DateTime   @updatedAt @map("updated_at")
+  
+  collection    Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  shards        Shard[]
+  userCards     UserCard[]
+  
+  @@map("cards")
+  @@index([collectionId])
+}
+
+// =====================================================
+// SHARDS - осколки (3 на каждую карточку)
+// =====================================================
+model Shard {
+  id          String   @id @default(uuid())
+  cardId      String   @map("card_id")
+  label       String   // A, B, C
+  imageUrl    String   @map("image_url")
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  card        Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  spawnPoints SpawnPoint[]
+  userShards  UserShard[]
+  
+  @@map("shards")
+  @@unique([cardId, label]) // Один осколок A, B, C на карточку
+  @@index([cardId])
+}
+
+// =====================================================
+// SPAWN POINTS - точки спавна на карте
+// =====================================================
+model SpawnPoint {
+  id          String   @id @default(uuid())
+  shardId     String   @map("shard_id")
+  latitude    Float
+  longitude   Float
+  radius      Float    @default(5) // метры
+  active      Boolean  @default(true)
+  expiresAt   DateTime? @map("expires_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  shard       Shard    @relation(fields: [shardId], references: [id], onDelete: Cascade)
+  dropPoints  DropSpawnPoint[]
+  
+  @@map("spawn_points")
+  @@index([shardId])
+  @@index([latitude, longitude])
+}
+
+// =====================================================
+// DROPS - расписание дропов
+// =====================================================
+model Drop {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  schedule    String? // cron expression
+  startDate   DateTime @map("start_date")
+  endDate     DateTime? @map("end_date")
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  spawnPoints DropSpawnPoint[]
+  
+  @@map("drops")
+}
+
+model DropSpawnPoint {
+  dropId        String @map("drop_id")
+  spawnPointId  String @map("spawn_point_id")
+  
+  drop          Drop       @relation(fields: [dropId], references: [id], onDelete: Cascade)
+  spawnPoint    SpawnPoint @relation(fields: [spawnPointId], references: [id], onDelete: Cascade)
+  
+  @@id([dropId, spawnPointId])
+  @@map("drop_spawn_points")
+}
+
+// =====================================================
+// USER SHARDS - осколки пользователей
+// =====================================================
+model UserShard {
+  id            String   @id @default(uuid())
+  userId        String   @map("user_id")
+  shardId       String   @map("shard_id")
+  collectedAt   DateTime @default(now()) @map("collected_at")
+  used          Boolean  @default(false) // использован при сборке карточки
+  
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shard         Shard    @relation(fields: [shardId], references: [id], onDelete: Cascade)
+  
+  @@map("user_shards")
+  @@index([userId])
+  @@index([shardId])
+  @@index([userId, used])
+}
+
+// =====================================================
+// USER CARDS - собранные карточки пользователей
+// =====================================================
+model UserCard {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  cardId      String   @map("card_id")
+  assembledAt DateTime @default(now()) @map("assembled_at")
+  minted      Boolean  @default(false)
+  tokenId     String?  @map("token_id")
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  card        Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  listing     Listing?
+  
+  @@map("user_cards")
+  @@index([userId])
+  @@index([cardId])
+}
+
+// =====================================================
+// LISTINGS - маркетплейс
+// =====================================================
+model Listing {
+  id          String   @id @default(uuid())
+  sellerId    String   @map("seller_id")
+  userCardId  String   @unique @map("user_card_id")
+  price       Float
+  status      String   @default("active") // active, sold, cancelled
+  banned      Boolean  @default(false)
+  banReason   String?  @map("ban_reason")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  seller      User     @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  userCard    UserCard @relation(fields: [userCardId], references: [id], onDelete: Cascade)
+  
+  @@map("listings")
+  @@index([sellerId])
+  @@index([status])
+}
+
+// =====================================================
+// ADMIN ROLES - роли администраторов
+// =====================================================
+model AdminRole {
+  userId      String   @id @map("user_id")
+  role        String   // owner, manager
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("admin_roles")
+}
+
+// =====================================================
+// SETTINGS - настройки системы
+// =====================================================
+model Setting {
+  key         String   @id
+  value       String
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  @@map("settings")
+}
+
+// =====================================================
+// WEB3 CONFIG - конфигурация Web3
+// =====================================================
+model Web3Config {
+  id              String   @id @default(uuid())
+  network         String   // mainnet, testnet, localhost
+  contractAddress String?  @map("contract_address")
+  rpcUrl          String?  @map("rpc_url")
+  apiKey          String?  @map("api_key")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  
+  @@map("web3_config")
+}
+
+// =====================================================
+// AUDIT LOG - логи действий админов
+// =====================================================
+model AuditLog {
+  id          String   @id @default(uuid())
+  adminId     String   @map("admin_id")
+  action      String
+  entity      String
+  entityId    String?  @map("entity_id")
+  before      String?  @db.Text // JSON
+  after       String?  @db.Text // JSON
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  @@map("audit_log")
+  @@index([adminId])
+  @@index([entity])
+  @@index([createdAt])
+}
+
+// =====================================================
+// SESSIONS - JWT сессии (для refresh tokens)
+// =====================================================
+model Session {
+  id            String   @id @default(uuid())
+  userId        String   @map("user_id")
+  refreshToken  String   @unique @map("refresh_token")
+  expiresAt     DateTime @map("expires_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+  
+  @@map("sessions")
+  @@index([userId])
+  @@index([refreshToken])
+}
