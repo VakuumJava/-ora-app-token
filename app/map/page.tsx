@@ -838,74 +838,137 @@ export default function MapPage() {
     : fragmentSpawns
 
   return (
-    <div className="flex h-screen flex-col bg-black">
+    <div className="flex h-screen flex-col bg-black relative overflow-hidden">
+      {/* Enhanced Cosmic Background */}
+      <div className="fixed inset-0 pointer-events-none">
+        {/* Glowing orbs */}
+        <div className="absolute top-20 left-10 w-[500px] h-[500px] bg-blue-600/15 rounded-full blur-[150px] animate-pulse" />
+        <div className="absolute top-40 right-20 w-[400px] h-[400px] bg-purple-600/15 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute bottom-32 left-1/3 w-[450px] h-[450px] bg-cyan-500/10 rounded-full blur-[140px] animate-pulse" style={{ animationDelay: '2s' }} />
+        <div className="absolute bottom-20 right-1/4 w-[350px] h-[350px] bg-indigo-500/10 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1.5s' }} />
+        
+        {/* Animated stars */}
+        {Array.from({ length: 80 }).map((_, i) => (
+          <div
+            key={i}
+            className="absolute bg-white rounded-full animate-twinkle"
+            style={{
+              width: `${1 + Math.random() * 2}px`,
+              height: `${1 + Math.random() * 2}px`,
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              opacity: 0.2 + Math.random() * 0.5,
+              animationDelay: `${Math.random() * 3}s`,
+              animationDuration: `${2 + Math.random() * 3}s`,
+            }}
+          />
+        ))}
+        
+        {/* Subtle grid overlay */}
+        <div 
+          className="absolute inset-0 opacity-[0.02]"
+          style={{
+            backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)',
+            backgroundSize: '50px 50px'
+          }}
+        />
+      </div>
+
+      <style jsx>{`
+        @keyframes twinkle {
+          0%, 100% { opacity: 0.1; transform: scale(0.8); }
+          50% { opacity: 1; transform: scale(1.2); }
+        }
+        .animate-twinkle {
+          animation: twinkle 3s ease-in-out infinite;
+        }
+      `}</style>
+
       <SiteHeader />
 
-      <div className="flex items-center justify-end gap-3 border-b border-white/10 bg-black/80 px-4 py-2 backdrop-blur-sm z-10">
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-7 rounded border-white/20 px-2.5 text-xs text-white hover:bg-white/10 bg-transparent"
-          onClick={() => setShowFilters(!showFilters)}
-        >
-          <Filter className="mr-1.5 h-3.5 w-3.5" />
-          Фильтры
-        </Button>
-        <Button
-          size="sm"
-          className="h-7 rounded bg-gradient-to-r from-blue-500 to-cyan-400 px-2.5 text-xs text-white"
-          onClick={handleGetUserLocation}
-        >
-          <Navigation className="mr-1.5 h-3.5 w-3.5" />
-          Моя локация
-        </Button>
+      <div className="flex items-center justify-between gap-3 border-b border-white/10 bg-black/80 px-6 py-3 backdrop-blur-xl z-10 shadow-lg shadow-black/50">
+        <h1 className="text-xl font-semibold text-white flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/30">
+            <MapPin className="h-4 w-4 text-white" />
+          </div>
+          Карта фрагментов
+        </h1>
+        <div className="flex gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 rounded-lg border-white/20 px-4 text-sm text-white/90 hover:bg-white/10 bg-white/5 backdrop-blur-sm transition-all hover:border-white/30"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <Filter className="mr-2 h-4 w-4" />
+            Фильтры
+          </Button>
+          <Button
+            size="sm"
+            className="h-9 rounded-lg bg-gradient-to-r from-blue-500 to-cyan-400 px-4 text-sm text-white hover:from-blue-600 hover:to-cyan-500 shadow-lg shadow-blue-500/30 transition-all hover:shadow-blue-500/40"
+            onClick={handleGetUserLocation}
+          >
+            <Navigation className="mr-2 h-4 w-4" />
+            Моя локация
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-1 overflow-hidden relative">
         {/* Filters Sidebar */}
         {showFilters && (
-          <aside className="absolute left-0 top-0 bottom-0 w-80 border-r border-white/10 bg-black/90 p-6 backdrop-blur-md overflow-y-auto z-20">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-white">Цепочки</h3>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSelectedChain(null)}
-                className="text-gray-400 hover:text-white"
-              >
-                Сбросить
-              </Button>
-            </div>
+          <aside className="absolute left-0 top-0 bottom-0 w-80 border-r border-white/10 bg-black/90 backdrop-blur-2xl overflow-y-auto z-20 shadow-2xl shadow-black/50">
+            {/* Gradient overlay for depth */}
+            <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 via-transparent to-purple-500/5 pointer-events-none" />
+            
+            <div className="relative p-6">
+              <div className="mb-6 flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                    <Sparkles className="h-4 w-4 text-white" />
+                  </div>
+                  Цепочки
+                </h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedChain(null)}
+                  className="text-gray-400 hover:text-white hover:bg-white/10 h-8 px-3 rounded-lg text-xs"
+                >
+                  Сбросить
+                </Button>
+              </div>
 
-            <div className="space-y-2">
-              {chains.map((chain) => {
-                const count = fragmentSpawns.filter((frag) => frag.chain === chain).length
-                return (
-                  <button
-                    key={chain}
-                    onClick={() => setSelectedChain(chain === selectedChain ? null : chain)}
-                    className={`w-full rounded-lg border p-3 text-left transition-all ${
-                      selectedChain === chain
-                        ? "border-blue-500 bg-blue-500/20 text-white"
-                        : "border-white/10 bg-white/5 text-gray-300 hover:border-white/20 hover:bg-white/10"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">{chain}</span>
-                      <span className="text-xs text-gray-400">{count} фрагментов</span>
+              <div className="space-y-2">
+                {chains.map((chain) => {
+                  const count = fragmentSpawns.filter((frag) => frag.chain === chain).length
+                  return (
+                    <button
+                      key={chain}
+                      onClick={() => setSelectedChain(chain === selectedChain ? null : chain)}
+                      className={`group w-full rounded-xl border p-3.5 text-left transition-all duration-300 ${
+                        selectedChain === chain
+                          ? "border-blue-500/50 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 text-white shadow-lg shadow-blue-500/20"
+                          : "border-white/10 bg-white/5 text-gray-300 hover:border-white/20 hover:bg-white/10 hover:shadow-lg"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium">{chain}</span>
+                        <span className="text-xs text-white/50 bg-white/10 px-2 py-0.5 rounded-full">{count}</span>
                     </div>
                   </button>
                 )
               })}
             </div>
+            </div>
           </aside>
         )}
 
         {isLoading ? (
-          <div className="flex-1 flex items-center justify-center bg-gray-900">
+          <div className="flex-1 flex items-center justify-center bg-black">
             <div className="text-center">
               <div className="mb-4 h-12 w-12 mx-auto border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-              <p className="text-white">Загрузка карты...</p>
+              <p className="text-white/80 text-sm">Загрузка карты...</p>
             </div>
           </div>
         ) : (
@@ -914,28 +977,32 @@ export default function MapPage() {
 
         {/* Fragment Details Panel */}
         {selectedFragment && (
-          <div className="absolute bottom-6 left-1/2 w-full max-w-md -translate-x-1/2 rounded-2xl border border-white/20 bg-black/90 p-6 backdrop-blur-md z-30">
-            <button
-              onClick={() => setSelectedFragment(null)}
-              className="absolute right-4 top-4 text-gray-400 hover:text-white"
-            >
-              <X className="h-5 w-5" />
-            </button>
+          <div className="absolute bottom-6 left-1/2 w-full max-w-md -translate-x-1/2 rounded-2xl border border-white/10 bg-black/90 backdrop-blur-2xl z-30 shadow-2xl shadow-black/50 overflow-hidden">
+            {/* Gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-purple-500/10 pointer-events-none" />
+            
+            <div className="relative p-6">
+              <button
+                onClick={() => setSelectedFragment(null)}
+                className="absolute right-4 top-4 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg p-1.5 transition-all"
+              >
+                <X className="h-4 w-4" />
+              </button>
 
-            <div className="mb-4 flex items-start justify-between">
-              <div>
-                <div className="mb-1 text-xs text-gray-400">{selectedFragment.chain}</div>
-                <h3 className="text-xl font-bold text-white">{selectedFragment.name}</h3>
-                <div className="mt-2 inline-flex items-center gap-2">
-                  <span
-                    className="rounded-full px-3 py-1 text-xs font-bold text-white"
-                    style={{ background: fragmentColors[selectedFragment.fragment as keyof typeof fragmentColors] }}
-                  >
-                    Фрагмент {selectedFragment.fragment}
-                  </span>
-                  <span
-                    className="rounded-full px-3 py-1 text-xs font-medium text-white"
-                    style={{ background: rarityColors[selectedFragment.rarity as keyof typeof rarityColors] }}
+              <div className="mb-4 flex items-start justify-between pr-8">
+                <div>
+                  <div className="mb-1 text-xs text-gray-400">{selectedFragment.chain}</div>
+                  <h3 className="text-xl font-bold text-white">{selectedFragment.name}</h3>
+                  <div className="mt-3 flex items-center gap-2">
+                    <span
+                      className="rounded-full px-3 py-1 text-xs font-bold text-white shadow-lg"
+                      style={{ background: fragmentColors[selectedFragment.fragment as keyof typeof fragmentColors] }}
+                    >
+                      Фрагмент {selectedFragment.fragment}
+                    </span>
+                    <span
+                      className="rounded-full px-3 py-1 text-xs font-semibold text-white shadow-lg"
+                      style={{ background: rarityColors[selectedFragment.rarity as keyof typeof rarityColors] }}
                   >
                     {selectedFragment.rarity}
                   </span>
