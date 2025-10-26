@@ -166,13 +166,15 @@ export default function InventoryPage() {
     )
   }
 
-  // Подготовка данных для отображения
-  const rarityTiers = Object.entries(rarityConfig).map(([key, config]) => ({
-    ...config,
-    rarity: key,
-    count: (inventory?.fragments.byRarity[key as keyof typeof inventory.fragments.byRarity] || 0) +
-           (inventory?.cards.byRarity[key as keyof typeof inventory.cards.byRarity] || 0),
-  }))
+  // Подготовка данных для отображения - показываем только редкости с предметами
+  const rarityTiers = Object.entries(rarityConfig)
+    .map(([key, config]) => ({
+      ...config,
+      rarity: key,
+      count: (inventory?.fragments.byRarity[key as keyof typeof inventory.fragments.byRarity] || 0) +
+             (inventory?.cards.byRarity[key as keyof typeof inventory.cards.byRarity] || 0),
+    }))
+    .filter(tier => tier.count > 0) // Показываем только редкости с предметами
 
   const selectedItems = selectedRarity 
     ? [
@@ -180,6 +182,8 @@ export default function InventoryPage() {
         ...(inventory?.cards.items.filter(item => item.rarity === selectedRarity) || [])
       ]
     : []
+
+  const hasAnyItems = (inventory?.fragments.total || 0) + (inventory?.cards.total || 0) > 0
 
   return (
     <div className="min-h-screen bg-black text-white relative overflow-hidden">
@@ -200,78 +204,98 @@ export default function InventoryPage() {
         </div>
       </section>
 
-      {/* Rarity Cards Grid */}
-      <section className="py-16 relative z-10 px-6">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-          {rarityTiers.map((tier) => (
-            <div
-              key={tier.rarity}
-              onClick={() => tier.count > 0 && setSelectedRarity(tier.rarity)}
-              className={`relative group cursor-pointer transition-all duration-500 ${
-                tier.count === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
-              }`}
-              style={{
-                background: `linear-gradient(135deg, rgba(${tier.glowColor}, 0.1) 0%, rgba(${tier.glowColor}, 0.05) 100%)`,
-                border: `1px solid rgba(${tier.glowColor}, 0.3)`,
-                boxShadow: `0 0 30px rgba(${tier.glowColor}, 0.2)`,
-              }}
-            >
-              {/* Card Inner */}
-              <div className="p-6 rounded-2xl backdrop-blur-sm">
-                {/* Count Badge */}
-                <div
-                  className="absolute -top-3 -right-3 w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg shadow-lg z-10"
-                  style={{
-                    background: tier.gradient,
-                    boxShadow: `0 0 20px rgba(${tier.glowColor}, 0.6)`,
-                  }}
-                >
-                  {tier.count}
-                </div>
-
-                {/* Rarity Name */}
-                <h3 className="text-2xl font-bold mb-2" style={{ color: tier.color }}>
-                  {tier.name}
-                </h3>
-                <p className="text-sm text-gray-400 mb-4">{tier.label}</p>
-
-                {/* Placeholder Image */}
-                <div className="w-full h-48 rounded-lg overflow-hidden mb-4 bg-white/5">
-                  {tier.image && (
-                    <img
-                      src={tier.image}
-                      alt={tier.name}
-                      className="w-full h-full object-cover"
-                    />
-                  )}
-                </div>
-
-                {/* Stats */}
-                <div className="text-sm space-y-1">
-                  <div className="flex justify-between text-gray-400">
-                    <span>Осколков:</span>
-                    <span className="text-white">{inventory?.fragments.byRarity[tier.rarity as keyof typeof inventory.fragments.byRarity] || 0}</span>
+      {/* Rarity Cards Grid or Empty State */}
+      {hasAnyItems ? (
+        <section className="py-16 relative z-10 px-6">
+          <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+            {rarityTiers.map((tier) => (
+              <div
+                key={tier.rarity}
+                onClick={() => setSelectedRarity(tier.rarity)}
+                className="relative group cursor-pointer transition-all duration-500 hover:scale-105"
+                style={{
+                  background: `linear-gradient(135deg, rgba(${tier.glowColor}, 0.1) 0%, rgba(${tier.glowColor}, 0.05) 100%)`,
+                  border: `1px solid rgba(${tier.glowColor}, 0.3)`,
+                  boxShadow: `0 0 30px rgba(${tier.glowColor}, 0.2)`,
+                }}
+              >
+                {/* Card Inner */}
+                <div className="p-6 rounded-2xl backdrop-blur-sm">
+                  {/* Count Badge */}
+                  <div
+                    className="absolute -top-3 -right-3 w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg shadow-lg z-10"
+                    style={{
+                      background: tier.gradient,
+                      boxShadow: `0 0 20px rgba(${tier.glowColor}, 0.6)`,
+                    }}
+                  >
+                    {tier.count}
                   </div>
-                  <div className="flex justify-between text-gray-400">
-                    <span>Карт:</span>
-                    <span className="text-white">{inventory?.cards.byRarity[tier.rarity as keyof typeof inventory.cards.byRarity] || 0}</span>
+
+                  {/* Rarity Name */}
+                  <h3 className="text-2xl font-bold mb-2" style={{ color: tier.color }}>
+                    {tier.name}
+                  </h3>
+                  <p className="text-sm text-gray-400 mb-4">{tier.label}</p>
+
+                  {/* Placeholder Image */}
+                  <div className="w-full h-48 rounded-lg overflow-hidden mb-4 bg-white/5">
+                    {tier.image && (
+                      <img
+                        src={tier.image}
+                        alt={tier.name}
+                        className="w-full h-full object-cover"
+                      />
+                    )}
+                  </div>
+
+                  {/* Stats */}
+                  <div className="text-sm space-y-1">
+                    <div className="flex justify-between text-gray-400">
+                      <span>Осколков:</span>
+                      <span className="text-white">{inventory?.fragments.byRarity[tier.rarity as keyof typeof inventory.fragments.byRarity] || 0}</span>
+                    </div>
+                    <div className="flex justify-between text-gray-400">
+                      <span>Карт:</span>
+                      <span className="text-white">{inventory?.cards.byRarity[tier.rarity as keyof typeof inventory.cards.byRarity] || 0}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Hover Glow Effect */}
-              {tier.count > 0 && (
+                {/* Hover Glow Effect */}
                 <div
                   className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
                   style={{
                     boxShadow: `0 0 50px rgba(${tier.glowColor}, 0.4), inset 0 0 50px rgba(${tier.glowColor}, 0.1)`,
                   }}
                 />
-              )}
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : (
+        <section className="py-32 relative z-10 px-6">
+          <div className="max-w-2xl mx-auto text-center">
+            <div className="mb-8">
+              <div className="w-32 h-32 mx-auto mb-6 rounded-full bg-white/5 flex items-center justify-center">
+                <svg className="w-16 h-16 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                </svg>
+              </div>
+              <h2 className="text-4xl font-bold mb-4 text-white">У вас пока нет предметов</h2>
+              <p className="text-xl text-gray-400 mb-8">
+                Начните исследовать карту и собирать осколки, чтобы создавать уникальные NFT-карты
+              </p>
+              <button
+                onClick={() => router.push('/map')}
+                className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105"
+              >
+                Перейти на карту
+              </button>
             </div>
-          ))}
-        </div>
-      </section>
+          </div>
+        </section>
+      )}
 
       {/* Modal for Viewing Items */}
       {selectedRarity && (
