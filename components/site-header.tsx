@@ -5,6 +5,8 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
+import { Wallet } from "lucide-react"
+import { WalletConnectModal } from "./wallet-connect-modal"
 
 interface User {
   id: string
@@ -17,6 +19,7 @@ export function SiteHeader() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isWalletModalOpen, setIsWalletModalOpen] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -28,7 +31,6 @@ export function SiteHeader() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // Проверка авторизации
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -62,13 +64,13 @@ export function SiteHeader() {
   }
 
   return (
+    <>
     <header className={`fixed top-0 left-0 right-0 z-50 w-full backdrop-blur-xl bg-black/30 border-b border-white/10 transition-all duration-300 ${
       isScrolled ? 'bg-black/50' : 'bg-black/30'
     }`}>
       <div className={`mx-auto flex max-w-[1920px] items-center justify-between px-6 md:px-12 transition-all duration-300 ${
         isScrolled ? 'h-16' : 'h-20'
       }`}>
-        {/* Logo */}
         <Link href="/" className={`flex items-center gap-3 hover:opacity-80 transition-all duration-300 ${
           isScrolled ? 'scale-90' : 'scale-100'
         }`}>
@@ -87,7 +89,6 @@ export function SiteHeader() {
           </span>
         </Link>
 
-        {/* Navigation */}
         <nav className="hidden lg:flex items-center justify-center gap-8">
           <Link 
             href="/collections" 
@@ -133,12 +134,10 @@ export function SiteHeader() {
           </Link>
         </nav>
 
-        {/* Auth section */}
         <div className="flex items-center justify-end gap-3">
           {isLoading ? (
             <div className="h-9 w-24 animate-pulse bg-white/10 rounded-full" />
           ) : user ? (
-            // Залогиненный пользователь
             <>
               <Link href="/profile">
                 <Button
@@ -153,6 +152,19 @@ export function SiteHeader() {
               <Button
                 variant="outline"
                 size="sm"
+                onClick={() => setIsWalletModalOpen(true)}
+                className="h-9 rounded-full border-white/20 bg-white/5 backdrop-blur-md px-5 text-sm text-white hover:bg-[#7FA0E3]/20 hover:border-[#7FA0E3]/40 transition-all flex items-center gap-2"
+                style={{ 
+                  fontFamily: "'Space Grotesk', sans-serif",
+                  boxShadow: "0 4px 16px 0 rgba(31, 38, 135, 0.2)"
+                }}
+              >
+                <Wallet className="w-4 h-4" />
+                Кошелек
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={handleLogout}
                 className="h-9 rounded-full border-white/20 bg-white/5 backdrop-blur-md px-5 text-sm text-white/80 hover:bg-red-500/20 hover:border-red-500/40 hover:text-white transition-all"
                 style={{ 
@@ -164,7 +176,6 @@ export function SiteHeader() {
               </Button>
             </>
           ) : (
-            // Не залогинен
             <>
               <Link href="/login">
                 <Button
@@ -194,5 +205,11 @@ export function SiteHeader() {
         </div>
       </div>
     </header>
+
+    <WalletConnectModal 
+      isOpen={isWalletModalOpen} 
+      onClose={() => setIsWalletModalOpen(false)} 
+    />
+    </>
   )
 }

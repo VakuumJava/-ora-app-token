@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import Script from "next/script"
+import { TonConnectProvider } from "@/components/ton-connect-provider"
 import "./globals.css"
 
 const _geist = Geist({ subsets: ["latin"] })
@@ -36,7 +37,9 @@ export default function RootLayout({
         />
       </head>
       <body className={`font-sans antialiased`}>
-        {children}
+        <TonConnectProvider>
+          {children}
+        </TonConnectProvider>
         <Analytics />
       </body>
     </html>
