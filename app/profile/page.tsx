@@ -20,12 +20,14 @@ export default function ProfilePage() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await fetch('/api/user/stats')
+        const response = await fetch('/api/user/stats', {
+          credentials: 'include'
+        })
         if (response.ok) {
           const data = await response.json()
           setStats(data)
         } else if (response.status === 401) {
-          router.push('/login')
+          setError('Необходимо войти в аккаунт')
         } else {
           setError('Ошибка загрузки статистики')
         }
