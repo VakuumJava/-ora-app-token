@@ -10,8 +10,20 @@ export function IntroAnimation({ onComplete }: IntroAnimationProps) {
   const [text, setText] = useState('')
   const [isDissolving, setIsDissolving] = useState(false)
   const fullText = 'Простая игра...\nНо цифровизация всего мира'
+  const [isReady, setIsReady] = useState(false)
 
   useEffect(() => {
+    // Небольшая задержка перед началом анимации для полной загрузки
+    const readyTimer = setTimeout(() => {
+      setIsReady(true)
+    }, 100)
+
+    return () => clearTimeout(readyTimer)
+  }, [])
+
+  useEffect(() => {
+    if (!isReady) return
+
     let currentIndex = 0
     const typingSpeed = 80 // миллисекунды на символ
 
@@ -31,7 +43,7 @@ export function IntroAnimation({ onComplete }: IntroAnimationProps) {
     }, typingSpeed)
 
     return () => clearInterval(typeInterval)
-  }, [fullText, onComplete])
+  }, [fullText, onComplete, isReady])
 
   return (
     <div className="fixed inset-0 z-[10000] bg-black flex items-center justify-center overflow-hidden">

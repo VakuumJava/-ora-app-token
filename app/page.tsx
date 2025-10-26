@@ -17,20 +17,29 @@ import { IntroAnimation } from "@/components/intro-animation"
 export default function HomePage() {
   const [showIntro, setShowIntro] = useState(true)
   const [hasVisited, setHasVisited] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     // Проверяем, был ли пользователь на сайте
-    const visited = localStorage.getItem('hasVisited')
+    const visited = sessionStorage.getItem('hasVisitedThisSession')
     if (visited) {
       setShowIntro(false)
       setHasVisited(true)
+      setIsLoading(false)
+    } else {
+      setIsLoading(false)
     }
   }, [])
 
   const handleIntroComplete = () => {
-    localStorage.setItem('hasVisited', 'true')
+    sessionStorage.setItem('hasVisitedThisSession', 'true')
     setShowIntro(false)
     setHasVisited(true)
+  }
+
+  // Ждем проверки sessionStorage перед показом
+  if (isLoading) {
+    return null
   }
 
   if (showIntro && !hasVisited) {

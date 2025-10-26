@@ -276,10 +276,10 @@ export default function InventoryPage() {
       ) : (
         <section className="py-32 relative z-10 px-6">
           <div className="max-w-2xl mx-auto text-center">
-            <div className="mb-8">
+            <div className="flex flex-col items-center justify-center">
               {/* Lottie Animation - используем JSON версию */}
               <div 
-                className="w-48 h-48 mx-auto mb-8"
+                className="w-48 h-48 mb-4"
                 dangerouslySetInnerHTML={{
                   __html: `
                     <dotlottie-player

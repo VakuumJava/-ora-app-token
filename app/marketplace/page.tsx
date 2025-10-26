@@ -204,37 +204,58 @@ export default function MarketplacePage() {
         {/* Filter Panel */}
         {showFilters && (
           <Card className="mb-6 border-white/10 bg-white/5 backdrop-blur-md">
-            <CardContent className="p-6 grid gap-4 md:grid-cols-2">
-              <div>
-                <label className="mb-2 block text-sm font-medium text-white">Цепочка</label>
-                <Select value={selectedChain} onValueChange={setSelectedChain}>
-                  <SelectTrigger className="border-white/10 bg-white/5 backdrop-blur-sm text-white">
-                    <SelectValue />
+            <CardContent className="p-6">
+              <div className="flex flex-wrap gap-3">
+                {/* Сортировка */}
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-auto min-w-[140px] border-white/20 bg-[#1a2332]/80 backdrop-blur-sm text-white/90 hover:bg-[#1a2332] transition-colors rounded-full px-4 py-2 h-10">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">💰</span>
+                      <SelectValue />
+                    </div>
                   </SelectTrigger>
-                  <SelectContent className="border-white/10 bg-black/90 backdrop-blur-xl text-white">
-                    {chains.map((chain) => (
-                      <SelectItem key={chain} value={chain.toLowerCase().replace(/\s+/g, "-")}>
-                        {chain}
-                      </SelectItem>
-                    ))}
+                  <SelectContent className="border-white/10 bg-[#0f1729]/95 backdrop-blur-xl text-white rounded-xl">
+                    <SelectItem value="recent" className="hover:bg-white/10 rounded-lg">Недавние</SelectItem>
+                    <SelectItem value="price-low" className="hover:bg-white/10 rounded-lg">Цена ↑</SelectItem>
+                    <SelectItem value="price-high" className="hover:bg-white/10 rounded-lg">Цена ↓</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
 
-              <div>
-                <label className="mb-2 block text-sm font-medium text-white">Редкость</label>
+                {/* Редкость */}
                 <Select value={selectedRarity} onValueChange={setSelectedRarity}>
-                  <SelectTrigger className="border-white/10 bg-white/5 backdrop-blur-sm text-white">
-                    <SelectValue />
+                  <SelectTrigger className="w-auto min-w-[140px] border-white/20 bg-[#1a2332]/80 backdrop-blur-sm text-white/90 hover:bg-[#1a2332] transition-colors rounded-full px-4 py-2 h-10">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">💎</span>
+                      <SelectValue placeholder="Редкость" />
+                    </div>
                   </SelectTrigger>
-                  <SelectContent className="border-white/10 bg-black/90 backdrop-blur-xl text-white">
-                    {rarities.map((rarity) => (
-                      <SelectItem key={rarity} value={rarity.toLowerCase().replace(/\s+/g, "-")}>
-                        {rarity}
-                      </SelectItem>
-                    ))}
+                  <SelectContent className="border-white/10 bg-[#0f1729]/95 backdrop-blur-xl text-white rounded-xl">
+                    <SelectItem value="all" className="hover:bg-white/10 rounded-lg">Все редкости</SelectItem>
+                    <SelectItem value="common" className="hover:bg-white/10 rounded-lg">Common</SelectItem>
+                    <SelectItem value="uncommon" className="hover:bg-white/10 rounded-lg">Uncommon</SelectItem>
+                    <SelectItem value="rare" className="hover:bg-white/10 rounded-lg">Rare</SelectItem>
+                    <SelectItem value="epic" className="hover:bg-white/10 rounded-lg">Epic</SelectItem>
+                    <SelectItem value="legendary" className="hover:bg-white/10 rounded-lg">Legendary</SelectItem>
                   </SelectContent>
                 </Select>
+
+                {/* Фон - для будущих фильтров */}
+                <button className="border border-white/20 bg-[#1a2332]/80 backdrop-blur-sm text-white/90 hover:bg-[#1a2332] transition-colors rounded-full px-4 py-2 h-10 flex items-center gap-2 text-sm">
+                  <span>🎨</span>
+                  <span>Фон</span>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {/* Узор */}
+                <button className="border border-white/20 bg-[#1a2332]/80 backdrop-blur-sm text-white/90 hover:bg-[#1a2332] transition-colors rounded-full px-4 py-2 h-10 flex items-center gap-2 text-sm">
+                  <span>🎭</span>
+                  <span>Узор</span>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
               </div>
             </CardContent>
           </Card>
@@ -312,9 +333,21 @@ export default function MarketplacePage() {
           </div>
         ) : (
           <div className="py-24 text-center">
-            <div className="mb-6 inline-flex h-24 w-24 items-center justify-center rounded-full bg-white/5 backdrop-blur-sm border border-white/10">
-              <ShoppingCart className="h-12 w-12 text-white/40" />
-            </div>
+            <div 
+              className="w-48 h-48 mx-auto mb-6"
+              dangerouslySetInnerHTML={{
+                __html: `
+                  <dotlottie-player
+                    src="/MarketNothing.json"
+                    background="transparent"
+                    speed="1"
+                    style="width: 100%; height: 100%;"
+                    loop
+                    autoplay
+                  ></dotlottie-player>
+                `
+              }}
+            />
             <h3 className="mb-3 text-2xl font-bold text-white">
               {error ? 'Ошибка загрузки' : 'Ничего не найдено'}
             </h3>
