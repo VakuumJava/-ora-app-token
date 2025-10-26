@@ -41,8 +41,8 @@ export async function GET(request: NextRequest) {
       },
     })
 
-    // Редирект на страницу успеха
-    return NextResponse.redirect(new URL('/login?verified=true', request.url))
+    // Редирект на главную страницу с уведомлением об успехе
+    return NextResponse.redirect(new URL('/?email_verified=true', request.url))
   } catch (error) {
     console.error('Email verification error:', error)
     return NextResponse.redirect(new URL('/login?error=verification_failed', request.url))
