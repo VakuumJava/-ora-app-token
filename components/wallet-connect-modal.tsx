@@ -1,8 +1,15 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, Wallet } from 'lucide-react'
+import { Wallet } from 'lucide-react'
 import { Button } from './ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from './ui/dialog'
 import { useTonConnectUI, useTonWallet } from '@tonconnect/ui-react'
 
 interface WalletConnectModalProps {
@@ -16,7 +23,6 @@ export function WalletConnectModal({ isOpen, onClose }: WalletConnectModalProps)
   const [ethereumAddress, setEthereumAddress] = useState<string | null>(null)
   const [isConnecting, setIsConnecting] = useState(false)
 
-  // Проверяем подключенный Ethereum кошелек при открытии
   useEffect(() => {
     if (isOpen && typeof window !== 'undefined' && window.ethereum) {
       window.ethereum
@@ -30,25 +36,12 @@ export function WalletConnectModal({ isOpen, onClose }: WalletConnectModalProps)
     }
   }, [isOpen])
 
-  // Закрытие по Escape
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    if (isOpen) {
-      document.addEventListener('keydown', handleEscape)
-      return () => document.removeEventListener('keydown', handleEscape)
-    }
-  }, [isOpen, onClose])
-
-  if (!isOpen) return null
-
   const connectTonWallet = async () => {
     try {
       setIsConnecting(true)
       await tonConnectUI.openModal()
     } catch (error) {
-      console.error('TON connection error:', error)
+      console.error('TON Connect error:', error)
     } finally {
       setIsConnecting(false)
     }
@@ -58,13 +51,13 @@ export function WalletConnectModal({ isOpen, onClose }: WalletConnectModalProps)
     try {
       await tonConnectUI.disconnect()
     } catch (error) {
-      console.error('TON disconnect error:', error)
+      console.error('TON Disconnect error:', error)
     }
   }
 
   const connectEthereumWallet = async () => {
     if (typeof window === 'undefined' || !window.ethereum) {
-      alert('Пожалуйста, установите MetaMask для подключения Ethereum кошелька')
+      alert('Установите MetaMask!')
       return
     }
 
@@ -76,13 +69,9 @@ export function WalletConnectModal({ isOpen, onClose }: WalletConnectModalProps)
       if (accounts.length > 0) {
         setEthereumAddress(accounts[0])
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Ethereum connection error:', error)
-      if (error.code === 4001) {
-        alert('Подключение отклонено пользователем')
-      } else {
-        alert('Ошибка подключения к MetaMask')
-      }
+      alert('Ошибка подключения MetaMask')
     } finally {
       setIsConnecting(false)
     }
@@ -100,47 +89,19 @@ export function WalletConnectModal({ isOpen, onClose }: WalletConnectModalProps)
   const isEthConnected = !!ethereumAddress
 
   return (
-    <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <div
-        className="relative w-full max-w-md rounded-3xl border border-white/10 bg-[#030014] p-8 shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
-        }}
-      >
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          className="absolute right-6 top-6 text-white/60 transition-colors hover:text-white"
-        >
-          <X className="h-6 w-6" />
-        </button>
-
-        {/* Header */}
-        <div className="mb-8">
-          <div className="mb-3 flex items-center gap-3">
-            <Wallet className="h-8 w-8 text-[#7FA0E3]" />
-            <h2
-              className="text-3xl font-bold text-white"
-              style={{ fontFamily: "'MuseoModerno', sans-serif" }}
-            >
-              Кошелек
-            </h2>
-          </div>
-          <p
-            className="text-white/60"
-            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-          >
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md border-white/10 bg-black/90 backdrop-blur-xl">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold text-white flex items-center gap-3">
+            <Wallet className="h-7 w-7 text-blue-400" />
+            Кошелек
+          </DialogTitle>
+          <DialogDescription className="text-white/60">
             Подключите TON или Ethereum кошелек
-          </p>
-        </div>
+          </DialogDescription>
+        </DialogHeader>
 
-        {/* Wallet buttons */}
-        <div className="space-y-4">
-          {/* TON Wallet */}
+        <div className="space-y-4 mt-6">
           {isTonConnected ? (
             <div className="flex items-center justify-between rounded-2xl border border-[#0088CC]/30 bg-[#0088CC]/10 p-4">
               <div className="flex items-center gap-3">
@@ -148,13 +109,8 @@ export function WalletConnectModal({ isOpen, onClose }: WalletConnectModalProps)
                   <span className="text-xl">💎</span>
                 </div>
                 <div>
-                  <div
-                    className="text-sm font-medium text-white"
-                    style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-                  >
-                    TON
-                  </div>
-                  <div className="text-xs text-white/60">
+                  <div className="text-sm font-medium text-white">TON</div>
+                  <div className="text-xs text-white/60 font-mono">
                     {tonWallet.account.address && formatAddress(tonWallet.account.address)}
                   </div>
                 </div>
@@ -173,7 +129,6 @@ export function WalletConnectModal({ isOpen, onClose }: WalletConnectModalProps)
               onClick={connectTonWallet}
               disabled={isConnecting}
               className="w-full rounded-2xl border border-[#0088CC]/30 bg-[#0088CC]/10 py-6 text-white transition-all hover:bg-[#0088CC]/20"
-              style={{ fontFamily: "'Space Grotesk', sans-serif" }}
             >
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#0088CC]/20">
@@ -187,7 +142,6 @@ export function WalletConnectModal({ isOpen, onClose }: WalletConnectModalProps)
             </Button>
           )}
 
-          {/* Ethereum Wallet */}
           {isEthConnected ? (
             <div className="flex items-center justify-between rounded-2xl border border-[#627EEA]/30 bg-[#627EEA]/10 p-4">
               <div className="flex items-center gap-3">
@@ -195,13 +149,8 @@ export function WalletConnectModal({ isOpen, onClose }: WalletConnectModalProps)
                   <span className="text-xl font-bold text-white">Ξ</span>
                 </div>
                 <div>
-                  <div
-                    className="text-sm font-medium text-white"
-                    style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-                  >
-                    ETH
-                  </div>
-                  <div className="text-xs text-white/60">{formatAddress(ethereumAddress)}</div>
+                  <div className="text-sm font-medium text-white">ETH</div>
+                  <div className="text-xs text-white/60 font-mono">{formatAddress(ethereumAddress)}</div>
                 </div>
               </div>
               <Button
@@ -218,7 +167,6 @@ export function WalletConnectModal({ isOpen, onClose }: WalletConnectModalProps)
               onClick={connectEthereumWallet}
               disabled={isConnecting}
               className="w-full rounded-2xl border border-[#627EEA]/30 bg-[#627EEA]/10 py-6 text-white transition-all hover:bg-[#627EEA]/20"
-              style={{ fontFamily: "'Space Grotesk', sans-serif" }}
             >
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#627EEA]/20">
@@ -233,15 +181,11 @@ export function WalletConnectModal({ isOpen, onClose }: WalletConnectModalProps)
           )}
         </div>
 
-        {/* Footer hint */}
-        <p
-          className="mt-6 text-center text-xs text-white/40"
-          style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-        >
+        <p className="mt-6 text-center text-xs text-white/40">
           Ваши кошельки будут использоваться для покупки и продажи NFT
         </p>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -249,8 +193,6 @@ declare global {
   interface Window {
     ethereum?: {
       request: (args: { method: string; params?: any[] }) => Promise<any>
-      on: (event: string, handler: (...args: any[]) => void) => void
-      removeListener: (event: string, handler: (...args: any[]) => void) => void
     }
   }
 }

@@ -315,28 +315,13 @@ export function SiteHeader() {
           >
             Инвентарь
           </Link>
-          <Link
-            href="/profile"
-            className="px-4 py-3 text-white/80 hover:text-white hover:bg-white/5 rounded-lg transition-all"
-            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-          >
-            Профиль
-          </Link>
 
           {/* Mobile Auth/User Section */}
           {user ? (
             <>
               <div className="border-t border-white/10 my-2" />
-              <button
-                onClick={() => setIsWalletModalOpen(true)}
-                className="px-4 py-3 text-left text-blue-400 hover:bg-white/5 rounded-lg transition-all flex items-center gap-2"
-                style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-              >
-                <Wallet className="w-4 h-4" />
-                Подключить кошелек
-              </button>
               <div className="px-4 py-3 text-white/60 text-sm">
-                {user.nickname}
+                Вы вошли как: {user.nickname}
               </div>
               <button
                 onClick={handleLogout}
