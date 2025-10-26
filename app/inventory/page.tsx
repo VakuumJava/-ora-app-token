@@ -5,464 +5,325 @@ import { useRouter } from "next/navigation"
 import { SiteHeader } from "@/components/site-header"
 import { CosmicBackground } from "@/components/cosmic-background"
 import { ParticlesBackground } from "@/components/particles-background"
-import { X } from "lucide-react"
-import Image from "next/image"
+import { X, Loader2 } from "lucide-react"
 
-// Редкости с обнуленными данными
-const rarityTiers = [
-  {
+interface InventoryData {
+  fragments: {
+    total: number
+    byRarity: {
+      common: number
+      uncommon: number
+      rare: number
+      epic: number
+      legendary: number
+    }
+    items: Array<{
+      id: string
+      fragmentId: string
+      name: string
+      description: string
+      rarity: string
+      imageUrl: string
+      collectedAt: string
+    }>
+  }
+  cards: {
+    total: number
+    byRarity: {
+      common: number
+      uncommon: number
+      rare: number
+      epic: number
+      legendary: number
+    }
+    items: Array<{
+      id: string
+      cardId: string
+      name: string
+      description: string
+      rarity: string
+      imageUrl: string
+      mintedAt: string
+      tokenId: string | null
+    }>
+  }
+}
+
+// Конфигурация редкостей
+const rarityConfig: Record<string, any> = {
+  common: {
+    name: "Common",
+    label: "Обычный",
+    color: "#9CA3AF",
+    borderColor: "#9CA3AF",
+    glowColor: "156, 163, 175",
+    gradient: "linear-gradient(135deg, #9CA3AF 0%, #D1D5DB 100%)",
+    image: "/image 17.png",
+  },
+  uncommon: {
     name: "Uncommon",
+    label: "Необычный",
     color: "#3B82F6",
     borderColor: "#3B82F6",
     glowColor: "59, 130, 246",
-    chance: "1/3",
-    rarity: "Необычный",
-    percentage: "0.5%",
     gradient: "linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%)",
-    items: ["Изумрудный осколок", "Лесной амулет", "Зелёное пламя"],
-    count: 0,
     image: "/image 18.png",
-    description: "Редкие предметы, которые можно найти в различных локациях",
-    totalMinted: "0",
-    totalSupply: "190,222",
-    holders: "0",
-    owner: "Qora NFT",
-    model: "Stone Pyramid",
-    pattern: "Ancient Symbols",
-    background: "Deep Space",
-    price: "$8.50"
   },
-  {
+  rare: {
     name: "Rare",
+    label: "Редкий",
     color: "#10B981",
     borderColor: "#10B981",
     glowColor: "16, 185, 129",
-    chance: "1/3",
-    rarity: "Редкий",
-    percentage: "0.5%",
     gradient: "linear-gradient(135deg, #10B981 0%, #34D399 100%)",
-    items: ["Сапфировая сфера", "Ледяное сердце", "Морская раковина"],
-    count: 0,
     image: "/image 19.png",
-    description: "Ценные артефакты с особыми свойствами",
-    totalMinted: "0",
-    totalSupply: "190,222",
-    holders: "0",
-    owner: "Qora NFT",
-    model: "Crystal Tree",
-    pattern: "Nature Flow",
-    background: "Forest Green",
-    price: "$12.00"
   },
-  {
+  epic: {
+    name: "Epic",
+    label: "Эпический",
+    color: "#8B5CF6",
+    borderColor: "#8B5CF6",
+    glowColor: "139, 92, 246",
+    gradient: "linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%)",
+    image: "/image 19.png",
+  },
+  legendary: {
     name: "Legendary",
+    label: "Легендарный",
     color: "#FF8C00",
     borderColor: "#FF8C00",
     glowColor: "255, 140, 0",
-    chance: "1/3",
-    rarity: "Легендарный",
-    percentage: "2%",
     gradient: "linear-gradient(135deg, #FF8C00 0%, #FFA500 100%)",
-    items: ["Золотой дракон", "Корона судьбы", "Феникс"],
-    count: 0,
     image: "/image 20.png",
-    description: "Легендарные сокровища невероятной редкости",
-    totalMinted: "0",
-    totalSupply: "190,222",
-    holders: "0",
-    owner: "Qora NFT",
-    model: "Golden Gift",
-    pattern: "Royal Pattern",
-    background: "Cosmic Gold",
-    price: "$15.00"
   },
-]
+}
 
 export default function InventoryPage() {
-  const [selectedRarity, setSelectedRarity] = useState<typeof rarityTiers[0] | null>(null)
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
-  const [user, setUser] = useState<any>(null)
+  const [selectedRarity, setSelectedRarity] = useState<string | null>(null)
+  const [inventory, setInventory] = useState<InventoryData | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
-  // Проверка авторизации
   useEffect(() => {
-    const checkAuth = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch('/api/auth/me')
+        // Проверяем авторизацию
+        const authResponse = await fetch('/api/auth/me')
         
-        if (response.ok) {
-          const data = await response.json()
-          setUser(data.user)
-          setIsAuthenticated(true)
-        } else {
-          setIsAuthenticated(false)
+        if (!authResponse.ok) {
           router.push('/login')
+          return
         }
-      } catch (error) {
-        setIsAuthenticated(false)
-        router.push('/login')
+
+        // Загружаем инвентарь
+        const inventoryResponse = await fetch('/api/inventory')
+        
+        if (!inventoryResponse.ok) {
+          throw new Error('Ошибка загрузки инвентаря')
+        }
+
+        const inventoryData = await inventoryResponse.json()
+        setInventory(inventoryData)
+      } catch (err) {
+        console.error('Error fetching data:', err)
+        setError('Не удалось загрузить инвентарь')
+      } finally {
+        setIsLoading(false)
       }
     }
 
-    checkAuth()
+    fetchData()
   }, [router])
 
-  // Показываем загрузку пока проверяем авторизацию
-  if (isAuthenticated === null) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen relative overflow-hidden bg-[#0a0a0f] flex items-center justify-center">
-        <CosmicBackground />
-        <div className="text-white text-xl">Загрузка...</div>
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-white text-center">
+          <Loader2 className="w-16 h-16 animate-spin mx-auto mb-4 text-blue-500" />
+          <p className="text-gray-400">Загрузка инвентаря...</p>
+        </div>
       </div>
     )
   }
 
-  // Если не авторизован, ничего не показываем (идет редирект)
-  if (!isAuthenticated) {
-    return null
+  if (error) {
+    return (
+      <div className="min-h-screen bg-black">
+        <SiteHeader />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center text-white">
+            <p className="text-red-400 text-xl mb-4">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition"
+            >
+              Попробовать снова
+            </button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
+  // Подготовка данных для отображения
+  const rarityTiers = Object.entries(rarityConfig).map(([key, config]) => ({
+    ...config,
+    rarity: key,
+    count: (inventory?.fragments.byRarity[key as keyof typeof inventory.fragments.byRarity] || 0) +
+           (inventory?.cards.byRarity[key as keyof typeof inventory.cards.byRarity] || 0),
+  }))
+
+  const selectedItems = selectedRarity 
+    ? [
+        ...(inventory?.fragments.items.filter(item => item.rarity === selectedRarity) || []),
+        ...(inventory?.cards.items.filter(item => item.rarity === selectedRarity) || [])
+      ]
+    : []
+
   return (
-    <div className="min-h-screen relative overflow-hidden bg-[#0a0a0f]">
-      {/* Фоны */}
+    <div className="min-h-screen bg-black text-white relative overflow-hidden">
       <CosmicBackground />
       <ParticlesBackground />
 
-      {/* Header */}
       <SiteHeader />
 
-      {/* Main Content */}
-      <main className="relative pt-24 pb-16 px-4">
-        <div className="max-w-4xl mx-auto">
-          {/* Заголовок - без анимации */}
-          <div className="text-center mb-8">
-            <h1 
-              className="text-3xl md:text-4xl font-bold tracking-tight"
+      {/* Hero Section */}
+      <section className="pt-32 pb-16 relative z-10 px-6">
+        <div className="max-w-7xl mx-auto text-center">
+          <h1 className="text-6xl font-bold mb-6 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+            Здесь хранятся ваши активы
+          </h1>
+          <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
+            Всего предметов: {(inventory?.fragments.total || 0) + (inventory?.cards.total || 0)}
+          </p>
+        </div>
+      </section>
+
+      {/* Rarity Cards Grid */}
+      <section className="py-16 relative z-10 px-6">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+          {rarityTiers.map((tier) => (
+            <div
+              key={tier.rarity}
+              onClick={() => tier.count > 0 && setSelectedRarity(tier.rarity)}
+              className={`relative group cursor-pointer transition-all duration-500 ${
+                tier.count === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
+              }`}
               style={{
-                fontFamily: "'Space Grotesk', sans-serif",
-                color: "#ffffff",
+                background: `linear-gradient(135deg, rgba(${tier.glowColor}, 0.1) 0%, rgba(${tier.glowColor}, 0.05) 100%)`,
+                border: `1px solid rgba(${tier.glowColor}, 0.3)`,
+                boxShadow: `0 0 30px rgba(${tier.glowColor}, 0.2)`,
               }}
             >
-              Здесь хранятся ваши активы
-            </h1>
-          </div>
-
-          {/* Сетка карточек - компактный дизайн */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-3xl mx-auto">
-            {rarityTiers.map((rarity) => (
-              <div 
-                key={rarity.name}
-                className="group relative cursor-pointer"
-                onClick={() => setSelectedRarity(rarity)}
-              >
-                {/* Основная карточка - меньше размер */}
-                <div 
-                  className="relative rounded-2xl overflow-hidden"
+              {/* Card Inner */}
+              <div className="p-6 rounded-2xl backdrop-blur-sm">
+                {/* Count Badge */}
+                <div
+                  className="absolute -top-3 -right-3 w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg shadow-lg z-10"
                   style={{
-                    background: `linear-gradient(135deg,
-                      rgba(${rarity.glowColor}, 0.06) 0%,
-                      rgba(${rarity.glowColor}, 0.02) 100%)`,
-                    backdropFilter: "blur(20px) saturate(180%)",
-                    WebkitBackdropFilter: "blur(20px) saturate(180%)",
-                    border: `1.5px solid rgba(${rarity.glowColor}, 0.3)`,
-                    boxShadow: `0 4px 16px rgba(0, 0, 0, 0.3)`,
+                    background: tier.gradient,
+                    boxShadow: `0 0 20px rgba(${tier.glowColor}, 0.6)`,
                   }}
                 >
-                  {/* Диагональная плашка сверху справа */}
-                  <div 
-                    className="absolute top-0 right-0 px-8 py-1.5 text-xs font-bold z-10"
-                    style={{
-                      background: `rgba(${rarity.glowColor}, 0.9)`,
-                      color: "#fff",
-                      fontFamily: "'Space Grotesk', sans-serif",
-                      clipPath: "polygon(0 0, 100% 0, 100% 100%, 20% 100%)",
-                      minWidth: "80px",
-                      textAlign: "right",
-                    }}
-                  >
-                    {rarity.chance}
-                  </div>
-
-                  {/* Изображение подарка - меньше */}
-                  <div className="relative flex items-center justify-center pt-10 pb-3 px-4">
-                    <div className="relative w-28 h-28">
-                      <Image
-                        src={rarity.image}
-                        alt={rarity.name}
-                        fill
-                        className="object-contain"
-                        style={{
-                          filter: `drop-shadow(0 0 15px rgba(${rarity.glowColor}, 0.3))`,
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Информация о карточке - компактнее */}
-                  <div className="relative px-4 pb-3">
-                    <div className="text-center mb-2">
-                      <h3 
-                        className="text-xl font-bold mb-0.5"
-                        style={{
-                          fontFamily: "'Space Grotesk', sans-serif",
-                          color: rarity.color,
-                        }}
-                      >
-                        {rarity.name}
-                      </h3>
-                      <p className="text-[10px] text-white/50" style={{ fontFamily: "'Inter', sans-serif" }}>
-                        {rarity.rarity} редкость
-                      </p>
-                    </div>
-
-                    {/* Статистика - компактнее */}
-                    <div 
-                      className="grid grid-cols-2 gap-1.5 mb-2"
-                      style={{
-                        background: "rgba(255, 255, 255, 0.03)",
-                        backdropFilter: "blur(10px)",
-                        borderRadius: "10px",
-                        padding: "8px",
-                        border: "1px solid rgba(255, 255, 255, 0.05)",
-                      }}
-                    >
-                      <div className="text-center">
-                        <div className="text-sm font-bold text-white">
-                          {rarity.totalMinted}
-                        </div>
-                        <div className="text-[9px] text-white/50">Выпущено</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-sm font-bold text-white">
-                          {rarity.holders}
-                        </div>
-                        <div className="text-[9px] text-white/50">Владельцев</div>
-                      </div>
-                    </div>
-
-                    {/* Краткое описание */}
-                    <p 
-                      className="text-[10px] text-white/60 text-center leading-relaxed"
-                      style={{ fontFamily: "'Inter', sans-serif" }}
-                    >
-                      {rarity.count} уникальных предмета
-                    </p>
-                  </div>
-
-                  {/* Нижняя полоска */}
-                  <div 
-                    className="h-0.5"
-                    style={{
-                      background: rarity.gradient,
-                      opacity: 0.5,
-                    }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </main>
-
-      {/* Модальное окно - более компактное */}
-      {selectedRarity && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{
-            background: "rgba(0, 0, 0, 0.5)",
-            backdropFilter: "blur(12px)",
-          }}
-          onClick={() => setSelectedRarity(null)}
-        >
-          <div 
-            className="relative w-full max-w-md"
-            style={{
-              background: "rgba(15, 15, 25, 0.95)",
-              backdropFilter: "blur(20px)",
-              border: "1px solid rgba(255, 255, 255, 0.1)",
-              borderRadius: "20px",
-              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.6)",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header с кнопкой закрытия */}
-            <div className="relative flex justify-end px-4 pt-4">
-              <button
-                onClick={() => setSelectedRarity(null)}
-                className="w-8 h-8 flex items-center justify-center rounded-full transition-colors"
-                style={{
-                  background: "rgba(255, 255, 255, 0.08)",
-                }}
-              >
-                <X className="w-4 h-4 text-white/60" />
-              </button>
-            </div>
-
-            {/* Content */}
-            <div className="relative px-6 pb-6">
-              {/* Image */}
-              <div className="flex items-center justify-center mb-4">
-                <div className="relative w-32 h-32">
-                  <Image
-                    src={selectedRarity.image}
-                    alt={selectedRarity.name}
-                    fill
-                    className="object-contain"
-                    style={{
-                      filter: `drop-shadow(0 0 20px rgba(${selectedRarity.glowColor}, 0.4))`,
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* Title */}
-              <h2 
-                className="text-2xl font-bold text-center mb-4"
-                style={{
-                  fontFamily: "'Space Grotesk', sans-serif",
-                  color: selectedRarity.color,
-                }}
-              >
-                {selectedRarity.name}
-              </h2>
-
-              {/* Detailed Info Table */}
-              <div 
-                className="rounded-2xl overflow-hidden mb-4"
-                style={{
-                  background: "rgba(255, 255, 255, 0.03)",
-                  border: "1px solid rgba(255, 255, 255, 0.08)",
-                }}
-              >
-                {/* Владелец */}
-                <div 
-                  className="flex justify-between items-center px-4 py-2.5 border-b"
-                  style={{ borderColor: "rgba(255, 255, 255, 0.05)" }}
-                >
-                  <span className="text-sm text-white/60">Владелец</span>
-                  <span className="text-sm text-white font-medium">{selectedRarity.owner}</span>
+                  {tier.count}
                 </div>
 
-                {/* Модель */}
-                <div 
-                  className="flex justify-between items-center px-4 py-2.5 border-b"
-                  style={{ borderColor: "rgba(255, 255, 255, 0.05)" }}
-                >
-                  <span className="text-sm text-white/60">Модель</span>
-                  <span className="text-sm text-white">{selectedRarity.model}</span>
-                </div>
-
-                {/* Узор */}
-                <div 
-                  className="flex justify-between items-center px-4 py-2.5 border-b"
-                  style={{ borderColor: "rgba(255, 255, 255, 0.05)" }}
-                >
-                  <span className="text-sm text-white/60">Узор</span>
-                  <span className="text-sm text-white">{selectedRarity.pattern}</span>
-                </div>
-
-                {/* Наличие */}
-                <div 
-                  className="flex justify-between items-center px-4 py-2.5 border-b"
-                  style={{ borderColor: "rgba(255, 255, 255, 0.05)" }}
-                >
-                  <span className="text-sm text-white/60">Наличие</span>
-                  <span className="text-sm text-white">
-                    Выпустили<br />
-                    <span className="font-medium">{selectedRarity.totalMinted}/{selectedRarity.totalSupply}</span>
-                  </span>
-                </div>
-
-                {/* Ценность */}
-                <div 
-                  className="flex justify-between items-center px-4 py-2.5"
-                >
-                  <span className="text-sm text-white/60">Ценность</span>
-                  <div className="text-right">
-                    <div className="text-sm text-white font-bold">{selectedRarity.price}</div>
-                    <button 
-                      className="text-xs font-medium mt-0.5"
-                      style={{ color: selectedRarity.color }}
-                    >
-                      подробнее
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Additional Stats */}
-              <div className="grid grid-cols-3 gap-2 mb-4">
-                <div 
-                  className="rounded-lg p-2.5 text-center"
-                  style={{
-                    background: "rgba(255, 255, 255, 0.03)",
-                    border: "1px solid rgba(255, 255, 255, 0.08)",
-                  }}
-                >
-                  <div className="text-sm font-bold text-white mb-0.5">
-                    {selectedRarity.count}
-                  </div>
-                  <div className="text-[9px] text-white/50">Предметов</div>
-                </div>
-                <div 
-                  className="rounded-lg p-2.5 text-center"
-                  style={{
-                    background: "rgba(255, 255, 255, 0.03)",
-                    border: "1px solid rgba(255, 255, 255, 0.08)",
-                  }}
-                >
-                  <div className="text-sm font-bold text-white mb-0.5">
-                    {selectedRarity.holders}
-                  </div>
-                  <div className="text-[9px] text-white/50">Владельцев</div>
-                </div>
-                <div 
-                  className="rounded-lg p-2.5 text-center"
-                  style={{
-                    background: `rgba(${selectedRarity.glowColor}, 0.15)`,
-                    border: `1px solid rgba(${selectedRarity.glowColor}, 0.3)`,
-                  }}
-                >
-                  <div 
-                    className="text-sm font-bold mb-0.5"
-                    style={{ color: selectedRarity.color }}
-                  >
-                    {selectedRarity.chance}
-                  </div>
-                  <div className="text-[9px] text-white/50">Редкость</div>
-                </div>
-              </div>
-
-              {/* Items List */}
-              <div 
-                className="rounded-xl p-3"
-                style={{
-                  background: "rgba(255, 255, 255, 0.02)",
-                  border: "1px solid rgba(255, 255, 255, 0.08)",
-                }}
-              >
-                <h3 
-                  className="text-xs font-semibold text-white/70 mb-2 uppercase tracking-wide"
-                  style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-                >
-                  Предметы в коллекции
+                {/* Rarity Name */}
+                <h3 className="text-2xl font-bold mb-2" style={{ color: tier.color }}>
+                  {tier.name}
                 </h3>
-                <div className="space-y-1.5">
-                  {selectedRarity.items.map((item, i) => (
-                    <div 
-                      key={i}
-                      className="flex items-center gap-2 text-sm text-white/80"
-                    >
-                      <div 
-                        className="w-1 h-1 rounded-full shrink-0"
-                        style={{ background: selectedRarity.color }}
-                      />
-                      <span style={{ fontFamily: "'Inter', sans-serif" }}>{item}</span>
-                    </div>
-                  ))}
+                <p className="text-sm text-gray-400 mb-4">{tier.label}</p>
+
+                {/* Placeholder Image */}
+                <div className="w-full h-48 rounded-lg overflow-hidden mb-4 bg-white/5">
+                  {tier.image && (
+                    <img
+                      src={tier.image}
+                      alt={tier.name}
+                      className="w-full h-full object-cover"
+                    />
+                  )}
+                </div>
+
+                {/* Stats */}
+                <div className="text-sm space-y-1">
+                  <div className="flex justify-between text-gray-400">
+                    <span>Осколков:</span>
+                    <span className="text-white">{inventory?.fragments.byRarity[tier.rarity as keyof typeof inventory.fragments.byRarity] || 0}</span>
+                  </div>
+                  <div className="flex justify-between text-gray-400">
+                    <span>Карт:</span>
+                    <span className="text-white">{inventory?.cards.byRarity[tier.rarity as keyof typeof inventory.cards.byRarity] || 0}</span>
+                  </div>
                 </div>
               </div>
+
+              {/* Hover Glow Effect */}
+              {tier.count > 0 && (
+                <div
+                  className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                  style={{
+                    boxShadow: `0 0 50px rgba(${tier.glowColor}, 0.4), inset 0 0 50px rgba(${tier.glowColor}, 0.1)`,
+                  }}
+                />
+              )}
             </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Modal for Viewing Items */}
+      {selectedRarity && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
+          <div className="relative max-w-6xl w-full bg-gray-900/95 rounded-2xl p-8 max-h-[90vh] overflow-y-auto border border-white/10">
+            {/* Close Button */}
+            <button
+              onClick={() => setSelectedRarity(null)}
+              className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition"
+            >
+              <X className="w-6 h-6" />
+            </button>
+
+            {/* Modal Header */}
+            <h2 className="text-4xl font-bold mb-8" style={{ color: rarityConfig[selectedRarity].color }}>
+              {rarityConfig[selectedRarity].name} - {rarityConfig[selectedRarity].label}
+            </h2>
+
+            {/* Items Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {selectedItems.map((item: any) => (
+                <div
+                  key={item.id}
+                  className="bg-white/5 rounded-xl p-4 border border-white/10 hover:bg-white/10 transition"
+                >
+                  {item.imageUrl && (
+                    <div className="w-full h-48 rounded-lg overflow-hidden mb-4 bg-white/5">
+                      <img
+                        src={item.imageUrl}
+                        alt={item.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <h3 className="text-xl font-bold mb-2 text-white">{item.name}</h3>
+                  <p className="text-sm text-gray-400 mb-4">{item.description}</p>
+                  <div className="text-xs text-gray-500">
+                    {item.collectedAt ? (
+                      <p>Собрано: {new Date(item.collectedAt).toLocaleDateString()}</p>
+                    ) : (
+                      <p>Создано: {new Date(item.mintedAt).toLocaleDateString()}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {selectedItems.length === 0 && (
+              <div className="text-center text-gray-400 py-12">
+                <p>Нет предметов этой редкости</p>
+              </div>
+            )}
           </div>
         </div>
       )}
