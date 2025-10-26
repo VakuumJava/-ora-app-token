@@ -58,21 +58,62 @@ export default function MapPage() {
     : fragmentSpawns
 
   const initMap = () => {
-    if (!window.ymaps || !mapContainer.current || mapInstance.current) return
+    console.log('🗺️ initMap called', { 
+      ymapsExists: !!window.ymaps, 
+      containerExists: !!mapContainer.current,
+      mapInstanceExists: !!mapInstance.current 
+    })
+    
+    if (!window.ymaps) {
+      console.error('❌ window.ymaps not available')
+      return
+    }
+    
+    if (!mapContainer.current) {
+      console.error('❌ mapContainer.current not available')
+      return
+    }
+    
+    if (mapInstance.current) {
+      console.log('⚠️ Map already initialized, skipping')
+      return
+    }
+
+    console.log('✅ Starting ymaps.ready()')
+    
     window.ymaps.ready(() => {
-      const startCenter = [42.875964, 74.603701]
-      mapInstance.current = new window.ymaps.Map(mapContainer.current, { center: startCenter, zoom: 12, type: 'yandex#dark', controls: ['zoomControl'] })
-      setIsLoading(false)
-      filteredFragments.forEach((spawn) => {
-        const placemark = new window.ymaps.Placemark(
-          [spawn.lat, spawn.lng],
-          { hintContent: spawn.name, balloonContent: `<div style="padding: 8px;"><strong>${spawn.name}</strong><br/>Фрагмент ${spawn.fragment} • ${spawn.rarity}<br/><span style="color: ${spawn.available ? '#10b981' : '#ef4444'}">${spawn.available ? 'Доступно' : 'Собрано'}</span></div>` },
-          { preset: 'islands#circleDotIcon', iconColor: fragmentColors[spawn.fragment] }
-        )
-        placemark.events.add('click', () => { setSelectedFragment(spawn) })
-        mapInstance.current.geoObjects.add(placemark)
-      })
-      locateUser()
+      try {
+        console.log('✅ ymaps.ready() callback fired')
+        const startCenter = [42.875964, 74.603701]
+        
+        console.log('Creating map with config:', { center: startCenter, zoom: 12, type: 'yandex#dark' })
+        mapInstance.current = new window.ymaps.Map(mapContainer.current, { 
+          center: startCenter, 
+          zoom: 12, 
+          type: 'yandex#dark', 
+          controls: ['zoomControl'] 
+        })
+        
+        console.log('✅ Map created successfully')
+        setIsLoading(false)
+        
+        console.log(`Adding ${filteredFragments.length} fragments to map`)
+        filteredFragments.forEach((spawn) => {
+          const placemark = new window.ymaps.Placemark(
+            [spawn.lat, spawn.lng],
+            { hintContent: spawn.name, balloonContent: `<div style="padding: 8px;"><strong>${spawn.name}</strong><br/>Фрагмент ${spawn.fragment} • ${spawn.rarity}<br/><span style="color: ${spawn.available ? '#10b981' : '#ef4444'}">${spawn.available ? 'Доступно' : 'Собрано'}</span></div>` },
+            { preset: 'islands#circleDotIcon', iconColor: fragmentColors[spawn.fragment] }
+          )
+          placemark.events.add('click', () => { setSelectedFragment(spawn) })
+          mapInstance.current.geoObjects.add(placemark)
+        })
+        
+        console.log('✅ All fragments added, calling locateUser()')
+        locateUser()
+      } catch (error) {
+        console.error('❌ Error initializing map:', error)
+        setIsLoading(false)
+      }
     })
   }
 
@@ -117,15 +158,50 @@ export default function MapPage() {
   }
 
   useEffect(() => {
+    console.log('🚀 useEffect: Loading Yandex Maps script')
+    
+    // Check if script already exists
+    const existingScript = document.querySelector('script[src*="api-maps.yandex.ru"]')
+    if (existingScript) {
+      console.log('⚠️ Yandex Maps script already loaded')
+      if (window.ymaps) {
+        console.log('✅ window.ymaps available, calling initMap')
+        initMap()
+      } else {
+        console.log('⏳ Waiting for ymaps to be available...')
+        existingScript.addEventListener('load', () => {
+          console.log('✅ Existing script loaded, calling initMap')
+          initMap()
+        })
+      }
+      return
+    }
+    
     const script = document.createElement('script')
     script.src = 'https://api-maps.yandex.ru/2.1/?lang=ru_RU'
     script.async = true
+    
     script.onload = () => {
+      console.log('✅ Yandex Maps script loaded successfully')
       if (window.ymaps && mapContainer.current) {
+        console.log('✅ Conditions met, calling initMap')
         initMap()
+      } else {
+        console.error('❌ Script loaded but conditions not met:', {
+          ymaps: !!window.ymaps,
+          container: !!mapContainer.current
+        })
       }
     }
+    
+    script.onerror = (error) => {
+      console.error('❌ Failed to load Yandex Maps script:', error)
+      setIsLoading(false)
+    }
+    
     document.head.appendChild(script)
+    console.log('📌 Script appended to document.head')
+    
     return () => {
       if (document.head.contains(script)) {
         document.head.removeChild(script)
