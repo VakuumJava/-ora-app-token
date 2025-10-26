@@ -36,9 +36,10 @@ export default function MapPage() {
   const [selectedFragment, setSelectedFragment] = useState<FragmentSpawn | null>(null)
   const [selectedChain, setSelectedChain] = useState<Chain | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [mapType, setMapType] = useState<'map' | 'satellite' | 'hybrid'>('map')
   
-  console.log('📊 Component state:', { isLoading, selectedChain, mapType })
+  console.log('📊 Component state:', { isLoading, loadError, selectedChain, mapType })
 
   const fragmentSpawns: FragmentSpawn[] = [
     { id: "1", lat: 42.8746, lng: 74.5698, fragment: "A", rarity: "Common", chain: "TON", name: "Ошская — площадь Ала-Тоо", available: true },
@@ -164,21 +165,32 @@ export default function MapPage() {
   useEffect(() => {
     console.log('🚀 useEffect: Loading Yandex Maps script')
     
+    // Set timeout for error handling
+    const timeout = setTimeout(() => {
+      if (isLoading) {
+        console.error('⏰ Map loading timeout after 10 seconds')
+        setLoadError('Карта не загрузилась за 10 секунд. Проверьте консоль для деталей.')
+        setIsLoading(false)
+      }
+    }, 10000)
+    
     // Check if script already exists
     const existingScript = document.querySelector('script[src*="api-maps.yandex.ru"]')
     if (existingScript) {
       console.log('⚠️ Yandex Maps script already loaded')
       if (window.ymaps) {
         console.log('✅ window.ymaps available, calling initMap')
+        clearTimeout(timeout)
         initMap()
       } else {
         console.log('⏳ Waiting for ymaps to be available...')
         existingScript.addEventListener('load', () => {
           console.log('✅ Existing script loaded, calling initMap')
+          clearTimeout(timeout)
           initMap()
         })
       }
-      return
+      return () => clearTimeout(timeout)
     }
     
     const script = document.createElement('script')
@@ -189,17 +201,22 @@ export default function MapPage() {
       console.log('✅ Yandex Maps script loaded successfully')
       if (window.ymaps && mapContainer.current) {
         console.log('✅ Conditions met, calling initMap')
+        clearTimeout(timeout)
         initMap()
       } else {
         console.error('❌ Script loaded but conditions not met:', {
           ymaps: !!window.ymaps,
           container: !!mapContainer.current
         })
+        setLoadError('Ошибка инициализации: ymaps или контейнер недоступны')
+        setIsLoading(false)
       }
     }
     
     script.onerror = (error) => {
       console.error('❌ Failed to load Yandex Maps script:', error)
+      clearTimeout(timeout)
+      setLoadError('Не удалось загрузить скрипт Yandex Maps')
       setIsLoading(false)
     }
     
@@ -207,6 +224,7 @@ export default function MapPage() {
     console.log('📌 Script appended to document.head')
     
     return () => {
+      clearTimeout(timeout)
       if (document.head.contains(script)) {
         document.head.removeChild(script)
       }
@@ -266,15 +284,36 @@ export default function MapPage() {
         </div>
       </div>
       <div className="relative flex-1 overflow-hidden">
-        {isLoading && (
-          <div className="flex h-full items-center justify-center text-white bg-black">
+        <div ref={mapContainer} style={{ width: "100%", height: "100%" }} />
+        {isLoading && !loadError && (
+          <div className="absolute inset-0 flex items-center justify-center text-white bg-black/90 backdrop-blur-sm z-50">
             <div className="text-center">
               <div className="mb-4 h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-blue-500 mx-auto" />
               <p className="text-sm text-gray-400">Загрузка карты...</p>
+              <p className="text-xs text-gray-500 mt-2">Проверьте консоль (F12) для логов</p>
             </div>
           </div>
         )}
-        <div ref={mapContainer} style={{ width: "100%", height: "100%" }} />
+        {loadError && (
+          <div className="absolute inset-0 flex items-center justify-center text-white bg-black/90 backdrop-blur-sm z-50">
+            <div className="text-center max-w-md p-6">
+              <div className="mb-4 text-6xl">❌</div>
+              <h2 className="text-xl font-bold mb-2">Ошибка загрузки карты</h2>
+              <p className="text-sm text-gray-400 mb-4">{loadError}</p>
+              <button 
+                onClick={() => {
+                  setLoadError(null)
+                  setIsLoading(true)
+                  window.location.reload()
+                }}
+                className="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg transition-colors"
+              >
+                Перезагрузить страницу
+              </button>
+              <p className="text-xs text-gray-500 mt-4">Откройте консоль (F12) для подробностей</p>
+            </div>
+          </div>
+        )}
         {selectedFragment && (
           <div className="absolute bottom-6 left-1/2 w-full max-w-md -translate-x-1/2 rounded-2xl border border-white/10 bg-black/90 backdrop-blur-2xl z-30 shadow-2xl shadow-black/50 overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-purple-500/10 pointer-events-none" />
