@@ -18,7 +18,7 @@ export function HeroSection() {
               letterSpacing: "-0.5px",
             }}
           >
-          {/* Левая звезда */}
+          
           <svg 
             className="absolute -left-16 top-4 w-10 h-10 animate-pulse" 
             viewBox="0 0 43 43" 
