@@ -15,7 +15,9 @@ export function SiteHeader() {
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
-  const isMainPage = pathname === '/'
+  
+  // Проверяем, на главной странице мы или нет
+  const isHomePage = pathname === '/'
 
   useEffect(() => {
     const handleScroll = () => {
@@ -60,20 +62,20 @@ export function SiteHeader() {
       isScrolled ? 'bg-black/50' : 'bg-black/30'
     }`}>
       <div className={`mx-auto flex max-w-[1920px] items-center justify-between px-6 md:px-12 transition-all duration-300 ${
-        isMainPage && !isScrolled ? 'h-20' : 'h-16'
+        isHomePage && !isScrolled ? 'h-20' : 'h-16'
       }`}>
         {/* Logo */}
         <Link href="/" className={`flex items-center gap-3 hover:opacity-80 transition-all duration-300 ${
-          isMainPage && !isScrolled ? 'scale-100' : 'scale-90'
+          isHomePage && !isScrolled ? 'scale-100' : 'scale-90'
         }`}>
           <div className={`relative transition-all duration-300 ${
-            isMainPage && !isScrolled ? 'w-[37px] h-[43px]' : 'w-[30px] h-[35px]'
+            isHomePage && !isScrolled ? 'w-[37px] h-[43px]' : 'w-[30px] h-[35px]'
           }`}>
             <Image src="/Logo.svg" alt="Qora" width={37} height={43} className="object-contain" />
           </div>
           <span
             className={`text-white font-normal transition-all duration-300 ${
-              isMainPage && !isScrolled ? 'text-[32px] md:text-[40px]' : 'text-[28px] md:text-[32px]'
+              isHomePage && !isScrolled ? 'text-[32px] md:text-[40px]' : 'text-[28px] md:text-[32px]'
             }`}
             style={{ fontFamily: "'MuseoModerno', sans-serif" }}
           >

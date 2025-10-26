@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client'
-import jwt from 'jsonwebtoken'
 import { cookies } from 'next/headers'
+import jwt from 'jsonwebtoken'
 
 const prisma = new PrismaClient()
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this'
@@ -8,74 +8,85 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this'
 export type AdminRole = 'owner' | 'manager'
 
 /**
- * Проверка прав администратора
+ * Получить ID текущего пользователя из JWT токена
  */
-export async function checkAdminRole(requiredRole?: AdminRole): Promise<{ authorized: boolean; role?: AdminRole; userId?: string }> {
+async function getCurrentUserId(): Promise<string | null> {
   try {
     const cookieStore = await cookies()
     const token = cookieStore.get('access_token')?.value
     
     if (!token) {
-      return { authorized: false }
+      return null
     }
 
     const decoded = jwt.verify(token, JWT_SECRET) as { userId: string }
-    
-    const adminRole = await prisma.adminRole.findUnique({
-      where: { userId: decoded.userId },
-      select: { role: true }
-    })
-
-    if (!adminRole) {
-      return { authorized: false }
-    }
-
-    // Owner имеет доступ ко всему
-    if (adminRole.role === 'owner') {
-      return { authorized: true, role: 'owner', userId: decoded.userId }
-    }
-
-    // Если требуется конкретная роль
-    if (requiredRole && adminRole.role !== requiredRole) {
-      return { authorized: false, role: adminRole.role as AdminRole, userId: decoded.userId }
-    }
-
-    return { authorized: true, role: adminRole.role as AdminRole, userId: decoded.userId }
+    return decoded.userId
   } catch (error) {
+    return null
+  }
+}
+
+/**
+ * Проверка прав администратора
+ */
+export async function checkAdminRole(requiredRole?: AdminRole): Promise<{ 
+  authorized: boolean
+  role?: AdminRole
+  adminId?: string 
+}> {
+  const userId = await getCurrentUserId()
+  
+  if (!userId) {
     return { authorized: false }
   }
+
+  const adminRole = await prisma.adminRole.findUnique({
+    where: { userId }
+  })
+
+  if (!adminRole) {
+    return { authorized: false }
+  }
+
+  // Owner имеет доступ ко всему
+  if (adminRole.role === 'owner') {
+    return { authorized: true, role: 'owner', adminId: userId }
+  }
+
+  // Если требуется конкретная роль
+  if (requiredRole && adminRole.role !== requiredRole) {
+    return { authorized: false, role: adminRole.role as AdminRole, adminId: userId }
+  }
+
+  return { authorized: true, role: adminRole.role as AdminRole, adminId: userId }
 }
 
 /**
  * Логирование действий администратора
  */
-export async function logAdminAction(params: {
-  action: string
-  entity: string
-  entityId?: string
-  before?: any
-  after?: any
-}): Promise<void> {
+export async function logAdminAction(
+  adminId: string,
+  params: {
+    action: string
+    entity: string
+    entity_id?: string
+    before?: any
+    after?: any
+  }
+): Promise<void> {
   try {
-    const cookieStore = await cookies()
-    const token = cookieStore.get('access_token')?.value
-    
-    if (!token) return
-
-    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string }
-
     await prisma.auditLog.create({
       data: {
-        adminId: decoded.userId,
+        adminId,
         action: params.action,
         entity: params.entity,
-        entityId: params.entityId,
+        entityId: params.entity_id,
         before: params.before ? JSON.stringify(params.before) : null,
         after: params.after ? JSON.stringify(params.after) : null,
       }
     })
   } catch (error) {
-    console.error('Error logging admin action:', error)
+    console.error('Failed to log admin action:', error)
   }
 }
 
@@ -94,48 +105,134 @@ export async function getSetting(key: string): Promise<string | null> {
  * Обновление настройки системы
  */
 export async function updateSetting(key: string, value: string): Promise<boolean> {
+  const adminId = await getCurrentUserId()
+  
+  if (!adminId) return false
+
   try {
+    // Получаем старое значение для аудита
     const oldValue = await getSetting(key)
 
     await prisma.setting.upsert({
       where: { key },
-      update: { value },
-      create: { key, value }
+      create: { key, value },
+      update: { value }
     })
 
-    await logAdminAction({
+    await logAdminAction(adminId, {
       action: 'update_setting',
       entity: 'settings',
-      entityId: key,
+      entity_id: key,
       before: { value: oldValue },
       after: { value },
     })
 
     return true
   } catch (error) {
+    console.error('Failed to update setting:', error)
     return false
   }
 }
 
 /**
- * Расчет расстояния между двумя точками (формула Haversine)
+ * Получение всех настроек
  */
-export function calculateDistance(
-  lat1: number,
-  lon1: number,
-  lat2: number,
-  lon2: number
-): number {
-  const R = 6371e3 // метры
-  const φ1 = (lat1 * Math.PI) / 180
-  const φ2 = (lat2 * Math.PI) / 180
-  const Δφ = ((lat2 - lat1) * Math.PI) / 180
-  const Δλ = ((lon2 - lon1) * Math.PI) / 180
+export async function getAllSettings(): Promise<Record<string, string>> {
+  const settings = await prisma.setting.findMany()
+  
+  return settings.reduce((acc, setting) => {
+    acc[setting.key] = setting.value
+    return acc
+  }, {} as Record<string, string>)
+}
 
-  const a =
-    Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-    Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2)
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+/**
+ * Проверка, является ли пользователь админом
+ */
+export async function isAdmin(userId: string): Promise<boolean> {
+  const adminRole = await prisma.adminRole.findUnique({
+    where: { userId }
+  })
+  
+  return !!adminRole
+}
 
-  return R * c
+/**
+ * Добавление роли админа пользователю
+ */
+export async function grantAdminRole(
+  targetUserId: string,
+  role: AdminRole = 'manager'
+): Promise<boolean> {
+  const adminId = await getCurrentUserId()
+  
+  if (!adminId) return false
+
+  const { authorized, role: currentRole } = await checkAdminRole()
+  
+  // Только owner может назначать админов
+  if (!authorized || currentRole !== 'owner') {
+    return false
+  }
+
+  try {
+    await prisma.adminRole.create({
+      data: {
+        userId: targetUserId,
+        role
+      }
+    })
+
+    await logAdminAction(adminId, {
+      action: 'grant_admin_role',
+      entity: 'admin_roles',
+      entity_id: targetUserId,
+      after: { role },
+    })
+
+    return true
+  } catch (error) {
+    console.error('Failed to grant admin role:', error)
+    return false
+  }
+}
+
+/**
+ * Удаление роли админа у пользователя
+ */
+export async function revokeAdminRole(targetUserId: string): Promise<boolean> {
+  const adminId = await getCurrentUserId()
+  
+  if (!adminId) return false
+
+  const { authorized, role: currentRole } = await checkAdminRole()
+  
+  // Только owner может удалять админов
+  if (!authorized || currentRole !== 'owner') {
+    return false
+  }
+
+  try {
+    const adminRole = await prisma.adminRole.findUnique({
+      where: { userId: targetUserId }
+    })
+
+    if (!adminRole) return false
+
+    await prisma.adminRole.delete({
+      where: { userId: targetUserId }
+    })
+
+    await logAdminAction(adminId, {
+      action: 'revoke_admin_role',
+      entity: 'admin_roles',
+      entity_id: targetUserId,
+      before: { role: adminRole.role },
+    })
+
+    return true
+  } catch (error) {
+    console.error('Failed to revoke admin role:', error)
+    return false
+  }
 }

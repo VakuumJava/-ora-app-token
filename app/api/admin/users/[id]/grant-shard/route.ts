@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { PrismaClient } from '@prisma/client'
 import { checkAdminRole, logAdminAction } from '@/lib/admin-utils'
+
+const prisma = new PrismaClient()
 
 /**
  * POST /api/admin/users/[id]/grant-shard - Выдать осколок пользователю
@@ -9,7 +11,7 @@ export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const { authorized } = await checkAdminRole()
+  const { authorized, adminId } = await checkAdminRole()
   
   if (!authorized) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -23,31 +25,59 @@ export async function POST(
       return NextResponse.json({ error: 'Shard ID is required' }, { status: 400 })
     }
 
-    const supabase = await createClient()
+    // Проверяем, существует ли пользователь
+    const user = await prisma.user.findUnique({
+      where: { id: params.id }
+    })
 
-    const { data, error } = await supabase
-      .from('user_shards')
-      .insert({
-        user_id: params.id,
-        shard_id,
-        obtained_at: new Date().toISOString(),
-      })
-      .select()
-      .single()
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    await logAdminAction({
+    // Проверяем, существует ли осколок
+    const shard = await prisma.shard.findUnique({
+      where: { id: shard_id }
+    })
+
+    if (!shard) {
+      return NextResponse.json({ error: 'Shard not found' }, { status: 404 })
+    }
+
+    // Выдаем осколок пользователю
+    const userShard = await prisma.userShard.create({
+      data: {
+        userId: params.id,
+        shardId: shard_id,
+      },
+      include: {
+        shard: {
+          include: {
+            card: true
+          }
+        }
+      }
+    })
+
+    // Обновляем счетчик осколков пользователя
+    await prisma.user.update({
+      where: { id: params.id },
+      data: {
+        totalShards: {
+          increment: 1
+        }
+      }
+    })
+
+    await logAdminAction(adminId!, {
       action: 'grant_shard',
       entity: 'user_shards',
-      entity_id: data.id,
+      entity_id: userShard.id,
       after: { user_id: params.id, shard_id },
     })
 
-    return NextResponse.json(data)
+    return NextResponse.json(userShard)
   } catch (error) {
+    console.error('Error granting shard:', error)
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
   }
 }
