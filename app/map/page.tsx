@@ -11,8 +11,8 @@ const MapComponent = dynamic(() => import("@/components/map-component"), {
   loading: () => (
     <div className="flex h-full items-center justify-center bg-black">
       <div className="text-center text-white">
-        <div className="mb-4 h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-blue-500 mx-auto" />
-        <p>Загрузка карты...</p>
+        <div className="mb-2 h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-blue-500 mx-auto" />
+        <p className="text-xs text-gray-400">Загрузка...</p>
       </div>
     </div>
   )
