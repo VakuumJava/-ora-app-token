@@ -6,7 +6,7 @@ import { HeroSection } from "@/components/hero-section"
 import { NFTCardsShowcase } from "@/components/nft-cards-showcase"
 import { HowItWorks } from "@/components/how-it-works"
 import { NFTFragmentsSection } from "@/components/nft-fragments-section"
-import { FeaturesGrid } from "@/components/features-grid"
+import { FeaturesSection } from "@/components/features-section"
 import { ScrollToTop } from "@/components/scroll-to-top"
 import { Footer } from "@/components/footer"
 
@@ -31,7 +31,7 @@ export default function HomePage() {
         <NFTCardsShowcase />
         <HowItWorks />
         <NFTFragmentsSection />
-        <FeaturesGrid />
+        <FeaturesSection />
       </main>
 
       {/* Scroll to Top Button */}
