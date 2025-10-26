@@ -6,9 +6,9 @@ import { checkAdminRole, logAdminAction } from '@/lib/admin-utils'
  * POST /api/admin/web3/test-mint - Тестовый минт NFT
  */
 export async function POST(request: NextRequest) {
-  const { authorized, role } = await checkAdminRole('owner')
+  const { authorized, adminId } = await checkAdminRole('owner')
   
-  if (!authorized) {
+  if (!authorized || !adminId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    await logAdminAction({
+    await logAdminAction(adminId, {
       action: 'test_mint',
       entity: 'web3_config',
       entity_id: config.id,

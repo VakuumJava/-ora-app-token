@@ -6,9 +6,9 @@ import { checkAdminRole, logAdminAction } from '@/lib/admin-utils'
  * POST /api/admin/cards - Создание карточки
  */
 export async function POST(request: NextRequest) {
-  const { authorized } = await checkAdminRole()
+  const { authorized, adminId } = await checkAdminRole()
   
-  if (!authorized) {
+  if (!authorized || !adminId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
 
     await supabase.from('shards').insert(shards)
 
-    await logAdminAction({
+    await logAdminAction(adminId, {
       action: 'create_card',
       entity: 'cards',
       entity_id: data.id,
@@ -65,9 +65,9 @@ export async function POST(request: NextRequest) {
  * GET /api/admin/cards - Получение всех карточек
  */
 export async function GET(request: NextRequest) {
-  const { authorized } = await checkAdminRole()
+  const { authorized, adminId } = await checkAdminRole()
   
-  if (!authorized) {
+  if (!authorized || !adminId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

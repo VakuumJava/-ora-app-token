@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { MapPin, Navigation, Filter, X, Sparkles } from "lucide-react"
 import Link from "next/link"
@@ -644,6 +645,34 @@ export default function MapPage() {
   const [showFilters, setShowFilters] = useState(false)
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
+  const router = useRouter()
+
+  // Проверка авторизации
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/auth/me')
+        
+        if (response.ok) {
+          setIsAuthenticated(true)
+        } else {
+          setIsAuthenticated(false)
+          router.push('/login')
+        }
+      } catch (error) {
+        setIsAuthenticated(false)
+        router.push('/login')
+      }
+    }
+
+    checkAuth()
+  }, [router])
+
+  // Если не авторизован, не инициализируем карту
+  if (isAuthenticated === false) {
+    return null
+  }
 
   useEffect(() => {
     if (typeof window === "undefined" || !mapContainer.current || map.current) return
@@ -658,6 +687,11 @@ export default function MapPage() {
         if (!L) {
           console.error("[v0] Leaflet not loaded from CDN")
           setIsLoading(false)
+          return
+        }
+
+        if (!mapContainer.current) {
+          console.warn("[v0] Map container not ready")
           return
         }
 

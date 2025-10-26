@@ -6,9 +6,9 @@ import { checkAdminRole } from '@/lib/admin-utils'
  * GET /api/admin/audit-log - Получение логов аудита
  */
 export async function GET(request: NextRequest) {
-  const { authorized } = await checkAdminRole()
+  const { authorized, adminId } = await checkAdminRole()
   
-  if (!authorized) {
+  if (!authorized || !adminId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

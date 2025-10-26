@@ -13,7 +13,7 @@ export async function POST(
 ) {
   const { authorized, adminId } = await checkAdminRole()
   
-  if (!authorized) {
+  if (!authorized || !adminId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

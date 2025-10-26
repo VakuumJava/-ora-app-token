@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -28,17 +29,49 @@ const rarities = ["Все редкости", "Common", "Uncommon", "Rare", "Epic
 
 export default function MarketplacePage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedChain, setSelectedChain] = useState("all")
   const [selectedRarity, setSelectedRarity] = useState("all")
   const [sortBy, setSortBy] = useState("recent")
   const [showFilters, setShowFilters] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
-    setIsAuthenticated(authService.isAuthenticated())
-  }, [])
+    const checkAuth = async () => {
+      try {
+        const response = await fetch("/api/auth/me")
+        if (response.ok) {
+          setIsAuthenticated(true)
+        } else {
+          router.push("/login")
+        }
+      } catch (error) {
+        console.error("Auth check failed:", error)
+        router.push("/login")
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    checkAuth()
+  }, [router])
 
   const listings: any[] = []
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-white text-center">
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-400">Проверка авторизации...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!isAuthenticated) {
+    return null
+  }
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">

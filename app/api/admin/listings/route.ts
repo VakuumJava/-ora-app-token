@@ -6,9 +6,9 @@ import { checkAdminRole, updateSetting } from '@/lib/admin-utils'
  * GET /api/admin/listings - Получение листингов
  */
 export async function GET(request: NextRequest) {
-  const { authorized } = await checkAdminRole()
+  const { authorized, adminId } = await checkAdminRole()
   
-  if (!authorized) {
+  if (!authorized || !adminId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -43,9 +43,9 @@ export async function GET(request: NextRequest) {
  * PATCH /api/admin/listings - Обновление настроек маркетплейса
  */
 export async function PATCH(request: NextRequest) {
-  const { authorized, role } = await checkAdminRole()
+  const { authorized, adminId } = await checkAdminRole()
   
-  if (!authorized) {
+  if (!authorized || !adminId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

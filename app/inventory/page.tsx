@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { SiteHeader } from "@/components/site-header"
 import { CosmicBackground } from "@/components/cosmic-background"
 import { ParticlesBackground } from "@/components/particles-background"
@@ -79,6 +80,47 @@ const rarityTiers = [
 
 export default function InventoryPage() {
   const [selectedRarity, setSelectedRarity] = useState<typeof rarityTiers[0] | null>(null)
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
+  const [user, setUser] = useState<any>(null)
+  const router = useRouter()
+
+  // Проверка авторизации
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/auth/me')
+        
+        if (response.ok) {
+          const data = await response.json()
+          setUser(data.user)
+          setIsAuthenticated(true)
+        } else {
+          setIsAuthenticated(false)
+          router.push('/login')
+        }
+      } catch (error) {
+        setIsAuthenticated(false)
+        router.push('/login')
+      }
+    }
+
+    checkAuth()
+  }, [router])
+
+  // Показываем загрузку пока проверяем авторизацию
+  if (isAuthenticated === null) {
+    return (
+      <div className="min-h-screen relative overflow-hidden bg-[#0a0a0f] flex items-center justify-center">
+        <CosmicBackground />
+        <div className="text-white text-xl">Загрузка...</div>
+      </div>
+    )
+  }
+
+  // Если не авторизован, ничего не показываем (идет редирект)
+  if (!isAuthenticated) {
+    return null
+  }
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-[#0a0a0f]">

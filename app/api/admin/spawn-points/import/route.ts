@@ -6,9 +6,9 @@ import { checkAdminRole, logAdminAction, getSetting } from '@/lib/admin-utils'
  * POST /api/admin/spawn-points/import - Импорт точек из CSV
  */
 export async function POST(request: NextRequest) {
-  const { authorized } = await checkAdminRole()
+  const { authorized, adminId } = await checkAdminRole()
   
-  if (!authorized) {
+  if (!authorized || !adminId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    await logAdminAction({
+    await logAdminAction(adminId, {
       action: 'import_spawn_points',
       entity: 'spawn_points',
       after: { count: data.length, shard_id },

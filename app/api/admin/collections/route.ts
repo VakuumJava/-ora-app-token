@@ -6,9 +6,9 @@ import { checkAdminRole, logAdminAction } from '@/lib/admin-utils'
  * POST /api/admin/collections - Создание коллекции
  */
 export async function POST(request: NextRequest) {
-  const { authorized } = await checkAdminRole()
+  const { authorized, adminId } = await checkAdminRole()
   
-  if (!authorized) {
+  if (!authorized || !adminId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    await logAdminAction({
+    await logAdminAction(adminId, {
       action: 'create_collection',
       entity: 'collections',
       entity_id: data.id,
@@ -57,9 +57,9 @@ export async function POST(request: NextRequest) {
  * GET /api/admin/collections - Получение всех коллекций
  */
 export async function GET() {
-  const { authorized } = await checkAdminRole()
+  const { authorized, adminId } = await checkAdminRole()
   
-  if (!authorized) {
+  if (!authorized || !adminId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

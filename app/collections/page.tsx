@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -231,8 +232,45 @@ const rarityColors = {
 
 export default function CollectionsPage() {
   const [selectedChain, setSelectedChain] = useState<string | null>(null)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const router = useRouter()
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await fetch("/api/auth/me")
+        if (response.ok) {
+          setIsAuthenticated(true)
+        } else {
+          router.push("/login")
+        }
+      } catch (error) {
+        console.error("Auth check failed:", error)
+        router.push("/login")
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    checkAuth()
+  }, [router])
 
   const selectedCollection = collections.find((c) => c.id === selectedChain)
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-white text-center">
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-400">Проверка авторизации...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!isAuthenticated) {
+    return null
+  }
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">

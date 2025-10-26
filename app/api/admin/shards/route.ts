@@ -6,9 +6,9 @@ import { checkAdminRole, logAdminAction } from '@/lib/admin-utils'
  * POST /api/admin/shards - Обновление осколка
  */
 export async function POST(request: NextRequest) {
-  const { authorized } = await checkAdminRole()
+  const { authorized, adminId } = await checkAdminRole()
   
-  if (!authorized) {
+  if (!authorized || !adminId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    await logAdminAction({
+    await logAdminAction(adminId, {
       action: 'update_shard',
       entity: 'shards',
       entity_id: data.id,
@@ -54,9 +54,9 @@ export async function POST(request: NextRequest) {
  * GET /api/admin/shards - Получение осколков
  */
 export async function GET(request: NextRequest) {
-  const { authorized } = await checkAdminRole()
+  const { authorized, adminId } = await checkAdminRole()
   
-  if (!authorized) {
+  if (!authorized || !adminId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

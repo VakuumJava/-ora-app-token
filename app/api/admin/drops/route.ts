@@ -6,9 +6,9 @@ import { checkAdminRole, logAdminAction } from '@/lib/admin-utils'
  * POST /api/admin/drops - Создание дропа
  */
 export async function POST(request: NextRequest) {
-  const { authorized } = await checkAdminRole()
+  const { authorized, adminId } = await checkAdminRole()
   
-  if (!authorized) {
+  if (!authorized || !adminId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
       await supabase.from('drop_spawn_points').insert(dropPoints)
     }
 
-    await logAdminAction({
+    await logAdminAction(adminId, {
       action: 'create_drop',
       entity: 'drops',
       entity_id: data.id,
@@ -69,9 +69,9 @@ export async function POST(request: NextRequest) {
  * GET /api/admin/drops - Получение всех дропов
  */
 export async function GET() {
-  const { authorized } = await checkAdminRole()
+  const { authorized, adminId } = await checkAdminRole()
   
-  if (!authorized) {
+  if (!authorized || !adminId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

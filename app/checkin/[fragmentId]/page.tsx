@@ -13,6 +13,8 @@ export default function CheckInPage() {
   const router = useRouter()
   const fragmentId = params.fragmentId as string
 
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number; accuracy: number } | null>(null)
   const [isChecking, setIsChecking] = useState(false)
   const [holdProgress, setHoldProgress] = useState(0)
@@ -22,6 +24,26 @@ export default function CheckInPage() {
 
   const holdTimerRef = useRef<NodeJS.Timeout | null>(null)
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Check authentication
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await fetch("/api/auth/me")
+        if (response.ok) {
+          setIsAuthenticated(true)
+        } else {
+          router.push("/login")
+        }
+      } catch (error) {
+        console.error("Auth check failed:", error)
+        router.push("/login")
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    checkAuth()
+  }, [router])
 
   // Mock fragment data - in production this would come from API
   const fragment = {
@@ -171,6 +193,21 @@ export default function CheckInPage() {
     distance !== null &&
     distance <= CHECK_IN_CONFIG.RADIUS_METERS &&
     userLocation.accuracy <= CHECK_IN_CONFIG.MAX_GPS_ACCURACY_METERS
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-white text-center">
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-400">Проверка авторизации...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!isAuthenticated) {
+    return null
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-black">

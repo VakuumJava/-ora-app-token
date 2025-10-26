@@ -6,9 +6,9 @@ import { checkAdminRole, logAdminAction } from '@/lib/admin-utils'
  * GET /api/admin/web3 - Получение конфигурации Web3
  */
 export async function GET() {
-  const { authorized, role } = await checkAdminRole('owner')
+  const { authorized, adminId } = await checkAdminRole('owner')
   
-  if (!authorized) {
+  if (!authorized || !adminId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -35,9 +35,9 @@ export async function GET() {
  * PATCH /api/admin/web3 - Обновление конфигурации Web3
  */
 export async function PATCH(request: NextRequest) {
-  const { authorized, role } = await checkAdminRole('owner')
+  const { authorized, adminId } = await checkAdminRole('owner')
   
-  if (!authorized) {
+  if (!authorized || !adminId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -85,7 +85,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    await logAdminAction({
+    await logAdminAction(adminId, {
       action: 'update_web3_config',
       entity: 'web3_config',
       entity_id: data.id,
