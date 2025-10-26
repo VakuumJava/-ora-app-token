@@ -24,22 +24,19 @@ interface FragmentSpawn {
 declare global {
   interface Window {
     ymaps: any
+    mapInitialized?: boolean
   }
 }
 
 export default function MapPage() {
-  console.log('🎯 MapPage component rendering')
-  
   const mapContainer = useRef<HTMLDivElement>(null)
   const mapInstance = useRef<any>(null)
   const userPlacemark = useRef<any>(null)
+  const markersRef = useRef<any[]>([])
   const [selectedFragment, setSelectedFragment] = useState<FragmentSpawn | null>(null)
   const [selectedChain, setSelectedChain] = useState<Chain | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [loadError, setLoadError] = useState<string | null>(null)
   const [mapType, setMapType] = useState<'map' | 'satellite' | 'hybrid'>('map')
-  
-  console.log('📊 Component state:', { isLoading, loadError, selectedChain, mapType })
 
   const fragmentSpawns: FragmentSpawn[] = [
     { id: "1", lat: 42.8746, lng: 74.5698, fragment: "A", rarity: "Common", chain: "TON", name: "Ошская — площадь Ала-Тоо", available: true },
@@ -62,94 +59,133 @@ export default function MapPage() {
     ? fragmentSpawns.filter((frag) => frag.chain === selectedChain)
     : fragmentSpawns
 
-  const initMap = () => {
-    console.log('🗺️ initMap called', { 
-      ymapsExists: !!window.ymaps, 
-      containerExists: !!mapContainer.current,
-      mapInstanceExists: !!mapInstance.current 
-    })
+  // Инициализация карты
+  useEffect(() => {
+    if (typeof window === 'undefined') return
     
-    if (!window.ymaps) {
-      console.error('❌ window.ymaps not available')
-      return
-    }
-    
-    if (!mapContainer.current) {
-      console.error('❌ mapContainer.current not available')
-      return
-    }
-    
-    if (mapInstance.current) {
-      console.log('⚠️ Map already initialized, skipping')
+    // Проверяем, уже загружен ли Yandex Maps
+    if (window.ymaps) {
+      window.ymaps.ready(() => {
+        if (!mapInstance.current && mapContainer.current) {
+          mapInstance.current = new window.ymaps.Map(mapContainer.current, {
+            center: [42.875964, 74.603701],
+            zoom: 12,
+            type: 'yandex#dark',
+            controls: ['zoomControl']
+          })
+          setIsLoading(false)
+          addMarkers()
+        }
+      })
       return
     }
 
-    console.log('✅ Starting ymaps.ready()')
+    // Загружаем скрипт Yandex Maps
+    const script = document.createElement('script')
+    script.src = 'https://api-maps.yandex.ru/2.1/?lang=ru_RU'
+    script.async = true
     
-    window.ymaps.ready(() => {
-      try {
-        console.log('✅ ymaps.ready() callback fired')
-        const startCenter = [42.875964, 74.603701]
-        
-        console.log('Creating map with config:', { center: startCenter, zoom: 12, type: 'yandex#dark' })
-        mapInstance.current = new window.ymaps.Map(mapContainer.current, { 
-          center: startCenter, 
-          zoom: 12, 
-          type: 'yandex#dark', 
-          controls: ['zoomControl'] 
+    script.onload = () => {
+      if (window.ymaps) {
+        window.ymaps.ready(() => {
+          if (mapContainer.current && !mapInstance.current) {
+            mapInstance.current = new window.ymaps.Map(mapContainer.current, {
+              center: [42.875964, 74.603701],
+              zoom: 12,
+              type: 'yandex#dark',
+              controls: ['zoomControl']
+            })
+            setIsLoading(false)
+            addMarkers()
+          }
         })
-        
-        console.log('✅ Map created successfully')
-        setIsLoading(false)
-        
-        console.log(`Adding ${filteredFragments.length} fragments to map`)
-        filteredFragments.forEach((spawn) => {
-          const placemark = new window.ymaps.Placemark(
-            [spawn.lat, spawn.lng],
-            { hintContent: spawn.name, balloonContent: `<div style="padding: 8px;"><strong>${spawn.name}</strong><br/>Фрагмент ${spawn.fragment} • ${spawn.rarity}<br/><span style="color: ${spawn.available ? '#10b981' : '#ef4444'}">${spawn.available ? 'Доступно' : 'Собрано'}</span></div>` },
-            { preset: 'islands#circleDotIcon', iconColor: fragmentColors[spawn.fragment] }
-          )
-          placemark.events.add('click', () => { setSelectedFragment(spawn) })
-          mapInstance.current.geoObjects.add(placemark)
-        })
-        
-        console.log('✅ All fragments added, calling locateUser()')
-        locateUser()
-      } catch (error) {
-        console.error('❌ Error initializing map:', error)
-        setIsLoading(false)
       }
+    }
+    
+    script.onerror = () => {
+      console.error('Failed to load Yandex Maps')
+      setIsLoading(false)
+    }
+    
+    document.head.appendChild(script)
+    
+    return () => {
+      // Cleanup при размонтировании
+      if (mapInstance.current) {
+        mapInstance.current.destroy()
+        mapInstance.current = null
+      }
+    }
+  }, [])
+
+  // Добавление маркеров
+  const addMarkers = () => {
+    if (!mapInstance.current || !window.ymaps) return
+    
+    // Очищаем старые маркеры
+    markersRef.current.forEach(marker => {
+      mapInstance.current?.geoObjects.remove(marker)
     })
+    markersRef.current = []
+    
+    // Добавляем новые маркеры
+    filteredFragments.forEach((spawn) => {
+      const placemark = new window.ymaps.Placemark(
+        [spawn.lat, spawn.lng],
+        { 
+          hintContent: spawn.name, 
+          balloonContent: `<div style="padding: 8px;"><strong>${spawn.name}</strong><br/>Фрагмент ${spawn.fragment} • ${spawn.rarity}<br/><span style="color: ${spawn.available ? '#10b981' : '#ef4444'}">${spawn.available ? 'Доступно' : 'Собрано'}</span></div>` 
+        },
+        { preset: 'islands#circleDotIcon', iconColor: fragmentColors[spawn.fragment] }
+      )
+      placemark.events.add('click', () => setSelectedFragment(spawn))
+      mapInstance.current.geoObjects.add(placemark)
+      markersRef.current.push(placemark)
+    })
+    
+    // Добавляем пользовательскую метку если была
+    if (userPlacemark.current) {
+      mapInstance.current.geoObjects.add(userPlacemark.current)
+    }
   }
 
+  // Обновление маркеров при изменении фильтра
+  useEffect(() => {
+    if (mapInstance.current && !isLoading) {
+      addMarkers()
+    }
+  }, [selectedChain])
+
   const locateUser = () => {
-    if (!navigator.geolocation) { alert("Ваш браузер не поддерживает геолокацию"); return }
+    if (!navigator.geolocation || !mapInstance.current || !window.ymaps) {
+      alert("Геолокация недоступна")
+      return
+    }
+    
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const coords = [pos.coords.latitude, pos.coords.longitude]
+        
         if (userPlacemark.current) {
           userPlacemark.current.geometry.setCoordinates(coords)
         } else {
           userPlacemark.current = new window.ymaps.Placemark(
-            coords, 
-            { hintContent: 'Вы здесь', balloonContent: '<div style="padding: 8px;"><strong>📍 Ваша локация</strong><br/>Вы находитесь здесь</div>' }, 
-            { 
+            coords,
+            { hintContent: 'Вы здесь', balloonContent: '<div style="padding: 8px;"><strong>📍 Ваша локация</strong><br/>Вы находитесь здесь</div>' },
+            {
               iconLayout: 'default#image',
               iconImageHref: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIxOCIgZmlsbD0iIzM4OGFFOCIgZmlsbC1vcGFjaXR5PSIwLjMiLz4KICA8Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIxMiIgZmlsbD0iIzM4OGFFOCIvPgogIDxjaXJjbGUgY3g9IjIwIiBjeT0iMjAiIHI9IjYiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPgo=',
               iconImageSize: [40, 40],
               iconImageOffset: [-20, -20]
             }
           )
-          mapInstance.current?.geoObjects.add(userPlacemark.current)
+          mapInstance.current.geoObjects.add(userPlacemark.current)
         }
-        mapInstance.current?.setCenter(coords, 15)
+        mapInstance.current.setCenter(coords, 15)
       },
       (err) => {
-        let msg = "Ошибка определения местоположения"
-        if (err.code === 1) msg = "Доступ к геолокации запрещён."
-        else if (err.code === 2) msg = "Информация о местоположении недоступна."
-        else if (err.code === 3) msg = "Превышено время ожидания."
-        console.error(msg, err)
+        console.error('Geolocation error:', err)
+        alert('Не удалось определить местоположение')
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     )
@@ -161,93 +197,6 @@ export default function MapPage() {
     mapInstance.current.setType(typeMap[type])
     setMapType(type)
   }
-
-  useEffect(() => {
-    console.log('🚀 useEffect: Loading Yandex Maps script')
-    
-    // Set timeout for error handling
-    const timeout = setTimeout(() => {
-      if (isLoading) {
-        console.error('⏰ Map loading timeout after 10 seconds')
-        setLoadError('Карта не загрузилась за 10 секунд. Проверьте консоль для деталей.')
-        setIsLoading(false)
-      }
-    }, 10000)
-    
-    // Check if script already exists
-    const existingScript = document.querySelector('script[src*="api-maps.yandex.ru"]')
-    if (existingScript) {
-      console.log('⚠️ Yandex Maps script already loaded')
-      if (window.ymaps) {
-        console.log('✅ window.ymaps available, calling initMap')
-        clearTimeout(timeout)
-        initMap()
-      } else {
-        console.log('⏳ Waiting for ymaps to be available...')
-        existingScript.addEventListener('load', () => {
-          console.log('✅ Existing script loaded, calling initMap')
-          clearTimeout(timeout)
-          initMap()
-        })
-      }
-      return () => clearTimeout(timeout)
-    }
-    
-    const script = document.createElement('script')
-    script.src = 'https://api-maps.yandex.ru/2.1/?lang=ru_RU'
-    script.async = true
-    
-    script.onload = () => {
-      console.log('✅ Yandex Maps script loaded successfully')
-      if (window.ymaps && mapContainer.current) {
-        console.log('✅ Conditions met, calling initMap')
-        clearTimeout(timeout)
-        initMap()
-      } else {
-        console.error('❌ Script loaded but conditions not met:', {
-          ymaps: !!window.ymaps,
-          container: !!mapContainer.current
-        })
-        setLoadError('Ошибка инициализации: ymaps или контейнер недоступны')
-        setIsLoading(false)
-      }
-    }
-    
-    script.onerror = (error) => {
-      console.error('❌ Failed to load Yandex Maps script:', error)
-      clearTimeout(timeout)
-      setLoadError('Не удалось загрузить скрипт Yandex Maps')
-      setIsLoading(false)
-    }
-    
-    document.head.appendChild(script)
-    console.log('📌 Script appended to document.head')
-    
-    return () => {
-      clearTimeout(timeout)
-      if (document.head.contains(script)) {
-        document.head.removeChild(script)
-      }
-    }
-  }, [])
-
-  useEffect(() => {
-    if (mapInstance.current && window.ymaps) {
-      mapInstance.current.geoObjects.removeAll()
-      if (userPlacemark.current) {
-        mapInstance.current.geoObjects.add(userPlacemark.current)
-      }
-      filteredFragments.forEach((spawn) => {
-        const placemark = new window.ymaps.Placemark(
-          [spawn.lat, spawn.lng],
-          { hintContent: spawn.name, balloonContent: `<div style="padding: 8px;"><strong>${spawn.name}</strong><br/>Фрагмент ${spawn.fragment} • ${spawn.rarity}<br/><span style="color: ${spawn.available ? '#10b981' : '#ef4444'}">${spawn.available ? 'Доступно' : 'Собрано'}</span></div>` },
-          { preset: 'islands#circleDotIcon', iconColor: fragmentColors[spawn.fragment] }
-        )
-        placemark.events.add('click', () => { setSelectedFragment(spawn) })
-        mapInstance.current.geoObjects.add(placemark)
-      })
-    }
-  }, [selectedChain, filteredFragments])
 
   return (
     <div className="flex h-screen flex-col bg-black relative overflow-hidden">
@@ -285,32 +234,11 @@ export default function MapPage() {
       </div>
       <div className="relative flex-1 overflow-hidden">
         <div ref={mapContainer} style={{ width: "100%", height: "100%" }} />
-        {isLoading && !loadError && (
+        {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center text-white bg-black/90 backdrop-blur-sm z-50">
             <div className="text-center">
               <div className="mb-4 h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-blue-500 mx-auto" />
               <p className="text-sm text-gray-400">Загрузка карты...</p>
-              <p className="text-xs text-gray-500 mt-2">Проверьте консоль (F12) для логов</p>
-            </div>
-          </div>
-        )}
-        {loadError && (
-          <div className="absolute inset-0 flex items-center justify-center text-white bg-black/90 backdrop-blur-sm z-50">
-            <div className="text-center max-w-md p-6">
-              <div className="mb-4 text-6xl">❌</div>
-              <h2 className="text-xl font-bold mb-2">Ошибка загрузки карты</h2>
-              <p className="text-sm text-gray-400 mb-4">{loadError}</p>
-              <button 
-                onClick={() => {
-                  setLoadError(null)
-                  setIsLoading(true)
-                  window.location.reload()
-                }}
-                className="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg transition-colors"
-              >
-                Перезагрузить страницу
-              </button>
-              <p className="text-xs text-gray-500 mt-4">Откройте консоль (F12) для подробностей</p>
             </div>
           </div>
         )}
