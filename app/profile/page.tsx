@@ -3,7 +3,9 @@
 import { useState, useEffect } from 'react'
 import { SiteHeader } from '@/components/site-header'
 import { useRouter } from 'next/navigation'
-import { Calendar, Gem, CreditCard, User } from 'lucide-react'
+import { Calendar, Gem, CreditCard, User, Trash2, Mail, UserCircle, AlertTriangle } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 
 interface UserStats {
   daysOnSite: number
@@ -21,6 +23,8 @@ export default function ProfilePage() {
   const [stats, setStats] = useState<UserStats | null>(null)
   const [user, setUser] = useState<UserData | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -55,6 +59,29 @@ export default function ProfilePage() {
 
     fetchData()
   }, [router])
+
+  const handleDeleteAccount = async () => {
+    setIsDeleting(true)
+    try {
+      const response = await fetch('/api/user/delete-account', {
+        method: 'DELETE',
+      })
+
+      if (response.ok) {
+        // Выход и перенаправление
+        await fetch('/api/auth/logout', { method: 'POST' })
+        router.push('/login?deleted=true')
+      } else {
+        const data = await response.json()
+        setError(data.error || 'Ошибка удаления аккаунта')
+      }
+    } catch (err) {
+      setError('Ошибка при удалении аккаунта')
+    } finally {
+      setIsDeleting(false)
+      setShowDeleteConfirm(false)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
@@ -160,6 +187,73 @@ export default function ProfilePage() {
                   </div>
                 </div>
               )}
+
+              {/* Настройки аккаунта */}
+              <div className="mt-8 rounded-2xl backdrop-blur-xl bg-white/5 border border-white/10 p-6">
+                <h2 className="text-xl font-bold text-white mb-6">Настройки аккаунта</h2>
+                
+                <div className="space-y-4">
+                  {/* Смена nickname */}
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start gap-3 h-14 bg-white/5 hover:bg-white/10 border-white/10 text-white"
+                    onClick={() => router.push('/profile/change-nickname')}
+                  >
+                    <UserCircle className="w-5 h-5" />
+                    Изменить никнейм
+                  </Button>
+
+                  {/* Смена email */}
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start gap-3 h-14 bg-white/5 hover:bg-white/10 border-white/10 text-white"
+                    onClick={() => router.push('/profile/change-email')}
+                  >
+                    <Mail className="w-5 h-5" />
+                    Изменить email
+                  </Button>
+
+                  {/* Удалить аккаунт */}
+                  {!showDeleteConfirm ? (
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start gap-3 h-14 bg-red-500/10 hover:bg-red-500/20 border-red-500/30 text-red-400 hover:text-red-300"
+                      onClick={() => setShowDeleteConfirm(true)}
+                    >
+                      <Trash2 className="w-5 h-5" />
+                      Удалить аккаунт
+                    </Button>
+                  ) : (
+                    <div className="rounded-xl bg-red-500/10 border border-red-500/30 p-4">
+                      <Alert className="bg-transparent border-0 p-0 mb-4">
+                        <AlertTriangle className="h-5 w-5 text-red-400" />
+                        <AlertDescription className="text-red-300 text-sm ml-2">
+                          <strong>Внимание!</strong> После удаления аккаунта ваш nickname и email будут освобождены и доступны для регистрации.
+                          Все ваши данные будут безвозвратно удалены.
+                        </AlertDescription>
+                      </Alert>
+                      
+                      <div className="flex gap-3">
+                        <Button
+                          variant="outline"
+                          className="flex-1 bg-white/5 hover:bg-white/10 border-white/20 text-white"
+                          onClick={() => setShowDeleteConfirm(false)}
+                          disabled={isDeleting}
+                        >
+                          Отмена
+                        </Button>
+                        <Button
+                          className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                          onClick={handleDeleteAccount}
+                          disabled={isDeleting}
+                        >
+                          {isDeleting ? 'Удаление...' : 'Удалить навсегда'}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </>
           )}
         </div>

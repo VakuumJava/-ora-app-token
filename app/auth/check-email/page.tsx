@@ -33,17 +33,22 @@ export default function CheckEmailPage() {
             </svg>
           </div>
 
-          <h1 className="text-2xl font-bold text-white mb-2">Проверьте почту</h1>
-          <p className="text-zinc-400 mb-4">
+          <h1 className="text-2xl font-bold text-white mb-2">📧 Проверьте почту</h1>
+          <p className="text-zinc-400 mb-6">
             Мы отправили письмо с подтверждением на вашу почту. Пожалуйста, перейдите по ссылке в письме, чтобы
             активировать аккаунт.
           </p>
 
-          <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4 mb-6 text-left">
-            <p className="text-yellow-400 text-sm font-medium mb-2">💡 Для разработки:</p>
-            <p className="text-yellow-400/80 text-xs">
-              Чтобы отключить подтверждение email, зайдите в Supabase Dashboard → Authentication → Providers → Email →
-              отключите "Confirm email"
+          <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 mb-6 text-left">
+            <p className="text-blue-400 text-sm font-medium mb-2">⚠️ Важно:</p>
+            <p className="text-blue-400/80 text-xs mb-2">
+              • Проверьте папку "Спам" или "Промоакции"
+            </p>
+            <p className="text-blue-400/80 text-xs mb-2">
+              • Письмо приходит с адреса: onboarding@resend.dev
+            </p>
+            <p className="text-blue-400/80 text-xs">
+              • Ссылка действительна в течение 24 часов
             </p>
           </div>
 

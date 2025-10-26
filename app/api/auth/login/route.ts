@@ -47,6 +47,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Проверка верификации email
+    if (!user.emailVerified) {
+      return NextResponse.json(
+        { 
+          error: 'Email не подтверждён',
+          code: 'EMAIL_NOT_VERIFIED',
+          message: 'Пожалуйста, проверьте вашу почту и подтвердите email адрес'
+        },
+        { status: 403 }
+      )
+    }
+
     // Обновление lastLoginAt
     await prisma.user.update({
       where: { id: user.id },

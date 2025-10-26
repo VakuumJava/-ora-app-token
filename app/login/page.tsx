@@ -41,6 +41,7 @@ function LoginForm() {
     e.preventDefault()
     setIsLoading(true)
     setError("")
+    setSuccessMessage("")
 
     try {
       const response = await fetch('/api/auth/login', {
@@ -57,7 +58,13 @@ function LoginForm() {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || "Ошибка входа")
+        // Специальная обработка для неподтверждённого email
+        if (data.code === 'EMAIL_NOT_VERIFIED') {
+          setError('📧 Email не подтверждён. Проверьте вашу почту и перейдите по ссылке из письма.')
+        } else {
+          throw new Error(data.error || "Ошибка входа")
+        }
+        return
       }
 
       // Успешный вход! Токены автоматически сохранены в cookies
@@ -77,7 +84,6 @@ function LoginForm() {
       setIsLoading(false)
     }
   }
-
   return (
     <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4">
       {/* Отблики для глубины */}

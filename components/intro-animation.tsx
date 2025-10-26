@@ -9,7 +9,7 @@ interface IntroAnimationProps {
 export function IntroAnimation({ onComplete }: IntroAnimationProps) {
   const [text, setText] = useState('')
   const [isDissolving, setIsDissolving] = useState(false)
-  const fullText = 'Простая игра...\nНо цифровизация всего мира'
+  const fullText = 'Простая игра...\nНо цифровизация'
   const [isReady, setIsReady] = useState(false)
 
   useEffect(() => {
@@ -47,32 +47,45 @@ export function IntroAnimation({ onComplete }: IntroAnimationProps) {
 
   return (
     <div className="fixed inset-0 z-[10000] bg-black flex items-center justify-center overflow-hidden">
-      {/* Звезды на фоне - появляются при растворении */}
+      {/* Звезды на фоне - спиральная анимация от центра */}
       {isDissolving && (
         <div className="absolute inset-0">
-          {Array.from({ length: 100 }).map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-1 h-1 bg-white rounded-full animate-twinkle"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 1.5}s`,
-                opacity: Math.random() * 0.7 + 0.3,
-              }}
-            />
-          ))}
+          {Array.from({ length: 150 }).map((_, i) => {
+            const angle = (i / 150) * Math.PI * 12 // 6 витков спирали
+            const distance = (i / 150) * 120 // Расстояние от центра
+            const offsetX = Math.cos(angle) * distance
+            const offsetY = Math.sin(angle) * distance
+            
+            return (
+              <div
+                key={i}
+                className="absolute bg-white rounded-full animate-spiral-star"
+                style={{
+                  left: '50%',
+                  top: '60%',
+                  width: `${Math.random() * 2 + 1}px`,
+                  height: `${Math.random() * 2 + 1}px`,
+                  animationDuration: `${1.2 + (i / 150) * 0.8}s`,
+                  animationDelay: `${(i / 150) * 0.4}s`,
+                  opacity: 0,
+                  '--spiral-x': `${offsetX}vw`,
+                  '--spiral-y': `${offsetY}vh`,
+                } as React.CSSProperties & { '--spiral-x': string; '--spiral-y': string }}
+              />
+            )
+          })}
         </div>
       )}
 
       {/* Текст */}
       <div className="relative z-10 px-8">
         <h1
-          className={`text-4xl md:text-6xl lg:text-7xl font-bold text-white text-center whitespace-pre-line transition-all duration-1000 ${
+          className={`text-2xl md:text-3xl lg:text-4xl font-normal text-white text-center whitespace-pre-line transition-all duration-1000 ${
             isDissolving ? 'opacity-0 scale-110 blur-xl' : 'opacity-100 scale-100 blur-0'
           }`}
           style={{
-            fontFamily: "'MuseoModerno', sans-serif",
+            fontFamily: "'Space Grotesk', sans-serif",
+            fontWeight: 400,
             textShadow: isDissolving
               ? '0 0 30px rgba(255,255,255,0.8), 0 0 60px rgba(255,255,255,0.5)'
               : '0 0 20px rgba(255,255,255,0.3)',
@@ -84,19 +97,22 @@ export function IntroAnimation({ onComplete }: IntroAnimationProps) {
       </div>
 
       <style jsx>{`
-        @keyframes twinkle {
-          0%, 100% {
+        @keyframes spiral-star {
+          0% {
+            transform: translate(-50%, -50%) scale(0);
             opacity: 0;
-            transform: scale(0);
           }
-          50% {
+          15% {
             opacity: 1;
-            transform: scale(1);
+          }
+          100% {
+            transform: translate(calc(var(--spiral-x) - 50%), calc(var(--spiral-y) - 50%)) scale(1);
+            opacity: 0.9;
           }
         }
 
-        .animate-twinkle {
-          animation: twinkle 2s ease-in-out infinite;
+        .animate-spiral-star {
+          animation: spiral-star ease-out forwards;
         }
       `}</style>
     </div>
