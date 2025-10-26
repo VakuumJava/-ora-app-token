@@ -30,25 +30,39 @@ const rarities = ["Все редкости", "Common", "Uncommon", "Rare", "Epic
 export default function MarketplacePage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [listings, setListings] = useState<any[]>([])
+  const [filteredListings, setFilteredListings] = useState<any[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedChain, setSelectedChain] = useState("all")
   const [selectedRarity, setSelectedRarity] = useState("all")
   const [sortBy, setSortBy] = useState("recent")
   const [showFilters, setShowFilters] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
+  // Загрузка данных
   useEffect(() => {
     const checkAuth = async () => {
       try {
         const response = await fetch("/api/auth/me")
-        if (response.ok) {
-          setIsAuthenticated(true)
-        } else {
+        if (!response.ok) {
           router.push("/login")
+          return
+        }
+        setIsAuthenticated(true)
+
+        // Загружаем маркетплейс
+        const marketplaceResponse = await fetch("/api/marketplace")
+        if (marketplaceResponse.ok) {
+          const data = await marketplaceResponse.json()
+          setListings(data.listings)
+          setFilteredListings(data.listings)
+        } else {
+          setError("Ошибка загрузки маркетплейса")
         }
       } catch (error) {
-        console.error("Auth check failed:", error)
-        router.push("/login")
+        console.error("Error loading marketplace:", error)
+        setError("Ошибка подключения")
       } finally {
         setIsLoading(false)
       }
@@ -56,7 +70,60 @@ export default function MarketplacePage() {
     checkAuth()
   }, [router])
 
-  const listings: any[] = []
+  // Фильтрация
+  useEffect(() => {
+    let filtered = [...listings]
+
+    // Поиск
+    if (searchQuery) {
+      filtered = filtered.filter(item =>
+        item.name.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    }
+
+    // Фильтр по редкости
+    if (selectedRarity !== "all") {
+      filtered = filtered.filter(item =>
+        item.rarity.toLowerCase() === selectedRarity.toLowerCase()
+      )
+    }
+
+    // Сортировка
+    if (sortBy === "price-low") {
+      filtered.sort((a, b) => a.price - b.price)
+    } else if (sortBy === "price-high") {
+      filtered.sort((a, b) => b.price - a.price)
+    }
+
+    setFilteredListings(filtered)
+  }, [listings, searchQuery, selectedRarity, sortBy])
+
+  // Покупка карты
+  const handlePurchase = async (cardId: string) => {
+    try {
+      const response = await fetch("/api/marketplace/purchase", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cardId }),
+      })
+
+      if (response.ok) {
+        alert("✅ Карта успешно куплена!")
+        // Перезагружаем список
+        const marketplaceResponse = await fetch("/api/marketplace")
+        if (marketplaceResponse.ok) {
+          const data = await marketplaceResponse.json()
+          setListings(data.listings)
+        }
+      } else {
+        const error = await response.json()
+        alert(`❌ Ошибка: ${error.error}`)
+      }
+    } catch (error) {
+      console.error("Purchase error:", error)
+      alert("❌ Ошибка при покупке")
+    }
+  }
 
   if (isLoading) {
     return (
@@ -173,36 +240,113 @@ export default function MarketplacePage() {
           </Card>
         )}
 
-        {/* Empty State */}
-        <div className="py-24 text-center">
-          <div className="mb-6 inline-flex h-24 w-24 items-center justify-center rounded-full bg-white/5 backdrop-blur-sm border border-white/10">
-            <ShoppingCart className="h-12 w-12 text-white/40" />
+        {/* Listings Grid */}
+        {filteredListings.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filteredListings.map((listing) => (
+              <Card
+                key={listing.id}
+                className="border-white/10 bg-white/5 backdrop-blur-md hover:bg-white/10 transition-all group"
+              >
+                <CardContent className="p-4">
+                  {/* Image */}
+                  <div className="relative aspect-square rounded-lg overflow-hidden mb-4 bg-white/5">
+                    {listing.imageUrl ? (
+                      <img
+                        src={listing.imageUrl}
+                        alt={listing.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-500">
+                        No Image
+                      </div>
+                    )}
+                    {/* Rarity Badge */}
+                    <div className="absolute top-2 right-2 px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md"
+                      style={{
+                        background: getRarityGradient(listing.rarity),
+                        boxShadow: `0 0 20px ${getRarityColor(listing.rarity)}40`,
+                      }}
+                    >
+                      {listing.rarity.toUpperCase()}
+                    </div>
+                  </div>
+
+                  {/* Info */}
+                  <h3 className="text-lg font-bold text-white mb-1 truncate">
+                    {listing.name}
+                  </h3>
+                  <p className="text-sm text-gray-400 mb-3 line-clamp-2">
+                    {listing.description || 'Уникальная NFT карта'}
+                  </p>
+
+                  {/* Stats */}
+                  <div className="flex items-center justify-between mb-4 text-sm text-gray-400">
+                    <span>Продавец</span>
+                    <span className="text-blue-400">{listing.seller}</span>
+                  </div>
+
+                  <div className="flex items-center justify-between mb-4 text-sm text-gray-400">
+                    <span>Доступно</span>
+                    <span className="text-white">{listing.available}</span>
+                  </div>
+
+                  {/* Price and Buy */}
+                  <div className="flex items-center justify-between pt-4 border-t border-white/10">
+                    <div>
+                      <div className="text-xs text-gray-400">Цена</div>
+                      <div className="text-xl font-bold text-white">${listing.price}</div>
+                    </div>
+                    <Button
+                      onClick={() => handlePurchase(listing.id)}
+                      className="bg-gradient-to-r from-blue-500 to-cyan-400 text-white hover:from-blue-600 hover:to-cyan-500"
+                      disabled={listing.available === 0}
+                    >
+                      {listing.available === 0 ? 'Распродано' : 'Купить'}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
-          <h3 className="mb-3 text-2xl font-bold text-white">Маркетплейс пуст</h3>
-          <p className="mb-8 text-gray-400 max-w-md mx-auto">
-            Пока никто не выставил NFT на продажу. Будьте первым, кто соберёт карточки и выставит их на маркетплейс!
-          </p>
-          {isAuthenticated ? (
-            <Link href="/map">
-              <Button
-                size="lg"
-                className="bg-gradient-to-r from-blue-500 to-cyan-400 text-white hover:from-blue-600 hover:to-cyan-500"
-              >
-                Начать собирать карточки
-              </Button>
-            </Link>
-          ) : (
-            <Link href="/register">
-              <Button
-                size="lg"
-                className="bg-gradient-to-r from-blue-500 to-cyan-400 text-white hover:from-blue-600 hover:to-cyan-500"
-              >
-                Зарегистрироваться
-              </Button>
-            </Link>
-          )}
-        </div>
+        ) : (
+          <div className="py-24 text-center">
+            <div className="mb-6 inline-flex h-24 w-24 items-center justify-center rounded-full bg-white/5 backdrop-blur-sm border border-white/10">
+              <ShoppingCart className="h-12 w-12 text-white/40" />
+            </div>
+            <h3 className="mb-3 text-2xl font-bold text-white">
+              {error ? 'Ошибка загрузки' : 'Ничего не найдено'}
+            </h3>
+            <p className="mb-8 text-gray-400 max-w-md mx-auto">
+              {error || 'Попробуйте изменить фильтры поиска'}
+            </p>
+          </div>
+        )}
       </section>
     </div>
   )
+}
+
+// Helper functions for rarity colors
+function getRarityColor(rarity: string): string {
+  const colors: Record<string, string> = {
+    common: '#9CA3AF',
+    uncommon: '#3B82F6',
+    rare: '#10B981',
+    epic: '#8B5CF6',
+    legendary: '#FF8C00',
+  }
+  return colors[rarity.toLowerCase()] || '#9CA3AF'
+}
+
+function getRarityGradient(rarity: string): string {
+  const gradients: Record<string, string> = {
+    common: 'linear-gradient(135deg, #9CA3AF 0%, #D1D5DB 100%)',
+    uncommon: 'linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%)',
+    rare: 'linear-gradient(135deg, #10B981 0%, #34D399 100%)',
+    epic: 'linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%)',
+    legendary: 'linear-gradient(135deg, #FF8C00 0%, #FFA500 100%)',
+  }
+  return gradients[rarity.toLowerCase()] || gradients.common
 }
