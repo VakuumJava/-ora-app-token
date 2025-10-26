@@ -1,23 +1,41 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect, Suspense } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { CosmicBackground } from "@/components/cosmic-background"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, CheckCircle } from "lucide-react"
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [identifier, setIdentifier] = useState("") // email или nickname
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+  const [successMessage, setSuccessMessage] = useState("")
+
+  useEffect(() => {
+    // Проверяем параметры URL
+    const verified = searchParams.get('verified')
+    const errorParam = searchParams.get('error')
+
+    if (verified === 'true') {
+      setSuccessMessage('✅ Email успешно подтверждён! Теперь вы можете войти.')
+    } else if (errorParam === 'invalid_token') {
+      setError('Недействительная ссылка подтверждения')
+    } else if (errorParam === 'token_expired') {
+      setError('Ссылка подтверждения истекла')
+    } else if (errorParam === 'verification_failed') {
+      setError('Ошибка при подтверждении email')
+    }
+  }, [searchParams])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -93,6 +111,12 @@ export default function LoginPage() {
             <CardDescription className="text-zinc-400 text-sm">Войдите в свой аккаунт</CardDescription>
           </CardHeader>
           <CardContent>
+            {successMessage && (
+              <Alert className="mb-4 backdrop-blur-md bg-green-950/30 border-green-500/30">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                <AlertDescription className="text-sm text-green-300">{successMessage}</AlertDescription>
+              </Alert>
+            )}
             {error && (
               <Alert variant="destructive" className="mb-4 backdrop-blur-md bg-red-950/30 border-red-500/30">
                 <AlertDescription className="text-sm">{error}</AlertDescription>
@@ -149,5 +173,13 @@ export default function LoginPage() {
         </Card>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center">Загрузка...</div>}>
+      <LoginForm />
+    </Suspense>
   )
 }

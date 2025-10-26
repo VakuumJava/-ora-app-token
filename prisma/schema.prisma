@@ -22,6 +22,11 @@ model User {
   bio             String?
   walletAddress   String?  @map("wallet_address")
   
+  // Email verification
+  emailVerified   Boolean  @default(false) @map("email_verified")
+  verificationToken String? @map("verification_token")
+  verificationTokenExpiry DateTime? @map("verification_token_expiry")
+  
   // Счетчики
   totalShards     Int      @default(0) @map("total_shards")
   totalCards      Int      @default(0) @map("total_cards")
@@ -40,6 +45,7 @@ model User {
   @@map("users")
   @@index([email])
   @@index([nickname])
+  @@index([verificationToken])
 }
 
 // =====================================================

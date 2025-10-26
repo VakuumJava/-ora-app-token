@@ -125,9 +125,9 @@ export default function RegisterPage() {
         throw new Error(data.error || "Ошибка регистрации")
       }
 
-      // Успешная регистрация! Токены автоматически сохранены в cookies
-      // Перенаправляем на главную страницу
-      router.push("/")
+      // Успешная регистрация! 
+      // Перенаправляем на страницу проверки email
+      router.push("/auth/check-email")
       router.refresh()
     } catch (err) {
       console.error("Registration error:", err)

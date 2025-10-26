@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/db'
 import { generateAccessToken, generateRefreshToken } from '@/lib/jwt'
+import { generateVerificationToken, sendVerificationEmail } from '@/lib/email'
 
 /**
  * POST /api/auth/register
@@ -72,12 +73,19 @@ export async function POST(request: NextRequest) {
     // Хеширование пароля
     const passwordHash = await bcrypt.hash(password, 10)
 
+    // Генерация токена подтверждения
+    const verificationToken = generateVerificationToken()
+    const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 часа
+
     // Создание пользователя
     const user = await prisma.user.create({
       data: {
         email: email.toLowerCase(),
         nickname,
         passwordHash,
+        verificationToken,
+        verificationTokenExpiry,
+        emailVerified: false,
       },
       select: {
         id: true,
@@ -88,8 +96,12 @@ export async function POST(request: NextRequest) {
         totalShards: true,
         totalCards: true,
         createdAt: true,
+        emailVerified: true,
       },
     })
+
+    // Отправка письма с подтверждением
+    await sendVerificationEmail(user.email, verificationToken)
 
     // Генерация JWT токенов
     const accessToken = generateAccessToken({
