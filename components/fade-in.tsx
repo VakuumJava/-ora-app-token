@@ -18,9 +18,13 @@ export function FadeIn({
   className = ''
 }: FadeInProps) {
   const [isVisible, setIsVisible] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    // Определяем мобильное устройство
+    setIsMobile(window.innerWidth < 768)
+    
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -64,9 +68,11 @@ export function FadeIn({
       ref={ref}
       className={className}
       style={{
-        opacity: isVisible ? 1 : 0,
-        transform: getTransform(),
-        transition: `opacity ${duration}s cubic-bezier(0.4, 0, 0.2, 1) ${delay}s, transform ${duration}s cubic-bezier(0.4, 0, 0.2, 1) ${delay}s`,
+        opacity: isVisible ? 1 : (isMobile ? 1 : 0),
+        transform: isMobile ? 'none' : getTransform(),
+        transition: isMobile 
+          ? 'none' 
+          : `opacity ${duration}s cubic-bezier(0.4, 0, 0.2, 1) ${delay}s, transform ${duration}s cubic-bezier(0.4, 0, 0.2, 1) ${delay}s`,
       }}
     >
       {children}

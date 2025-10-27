@@ -37,9 +37,9 @@ const infoColumns = [
 
 export function InfoSection() {
   return (
-    <section className="relative py-12 sm:py-16 md:py-20 border-t border-white/10">
+    <section className="relative py-8 sm:py-12 md:py-16 border-t border-white/10">
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-10 md:gap-12 mt-8 sm:mt-10 md:mt-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 md:gap-10 mt-6 sm:mt-8">
           {infoColumns.map((column, index) => (
             <FadeIn key={index} delay={0.05 + index * 0.05} duration={0.3}>
               <div>

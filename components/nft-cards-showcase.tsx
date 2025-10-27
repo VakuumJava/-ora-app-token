@@ -4,8 +4,8 @@ import { FadeIn } from "@/components/fade-in"
 export function NFTCardsShowcase() {
   return (
     <FadeIn delay={0} duration={0.3}>
-      <div className="relative w-full mx-auto px-4 sm:px-6">
-        <div className="relative w-full flex items-center justify-center" style={{ minHeight: "150px" }}>
+      <div className="relative w-full mx-auto px-4 sm:px-6 py-4 sm:py-6">
+        <div className="relative w-full flex items-center justify-center" style={{ minHeight: "120px" }}>
           <Image 
             src="/cards/Initial Cards.svg" 
             alt="NFT Cards Collection" 

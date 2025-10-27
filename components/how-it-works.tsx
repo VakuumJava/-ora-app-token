@@ -22,11 +22,11 @@ const steps = [
 
 export function HowItWorks() {
   return (
-    <section className="relative py-8 sm:py-12">
+    <section className="relative py-6 sm:py-8 md:py-10">
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
         <FadeIn delay={0} duration={0.3}>
           <h2 
-            className="mb-8 sm:mb-12 text-center text-2xl sm:text-3xl font-bold text-white"
+            className="mb-6 sm:mb-8 text-center text-2xl sm:text-3xl font-bold text-white"
             style={{
               fontFamily: "'Space Grotesk', sans-serif",
               letterSpacing: "-0.5px",

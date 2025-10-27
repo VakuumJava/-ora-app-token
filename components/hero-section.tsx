@@ -4,7 +4,7 @@ import { FadeIn } from "@/components/fade-in"
 
 export function HeroSection() {
   return (
-    <section className="relative container mx-auto px-4 sm:px-6 pt-24 sm:pt-32 md:pt-40">
+    <section className="relative container mx-auto px-4 sm:px-6 pt-16 sm:pt-24 md:pt-32 pb-6 sm:pb-8">
       <div className="flex flex-col items-center justify-center max-w-2xl mx-auto">
         <FadeIn delay={0} duration={0.4}>
           <h1
@@ -49,7 +49,7 @@ export function HeroSection() {
 
         <FadeIn delay={0.1} duration={0.4}>
           <p 
-            className="text-center text-white/70 text-sm sm:text-base leading-relaxed mb-8 sm:mb-10 max-w-xl px-4"
+            className="text-center text-white/70 text-sm sm:text-base leading-relaxed mb-6 sm:mb-8 max-w-xl px-4"
             style={{
               fontFamily: "'Inter', sans-serif",
             }}

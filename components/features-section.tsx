@@ -32,8 +32,8 @@ export function FeaturesSection() {
   ]
 
   return (
-    <section className="relative container mx-auto px-6 py-20 pb-24">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-6xl mx-auto">
+    <section className="relative container mx-auto px-4 sm:px-6 py-8 sm:py-12 md:py-16">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 max-w-6xl mx-auto">
         {features.map((feature, index) => (
           <FadeIn key={index} delay={0.05 + index * 0.05} duration={0.3}>
             <div 

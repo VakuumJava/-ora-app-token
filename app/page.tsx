@@ -93,7 +93,7 @@ function HomePageContent() {
       )}
 
       {/* Main Content */}
-      <main className="pt-20">
+      <main className="pt-16 sm:pt-20">
         <HeroSection />
         <NFTCardsShowcase />
         <HowItWorks />
