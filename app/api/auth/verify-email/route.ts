@@ -2,10 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { isTokenExpired } from '@/lib/email'
 
-/**
- * GET /api/auth/verify-email?token=xxx
- * Подтверждение email пользователя
- */
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams
