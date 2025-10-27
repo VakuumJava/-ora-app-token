@@ -29,7 +29,7 @@ export function NFTFragmentsSection() {
               className="object-contain w-full h-auto"
               loading="lazy"
             />
-            />
+            
           </div>
         </FadeIn>
       </div>
