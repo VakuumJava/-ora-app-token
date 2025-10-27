@@ -37,26 +37,26 @@ const infoColumns = [
 
 export function InfoSection() {
   return (
-    <section className="relative py-20 border-t border-white/10">
-      <div className="relative mx-auto max-w-6xl px-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mt-12">
+    <section className="relative py-12 sm:py-16 md:py-20 border-t border-white/10">
+      <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-10 md:gap-12 mt-8 sm:mt-10 md:mt-12">
           {infoColumns.map((column, index) => (
             <FadeIn key={index} delay={0.2 + index * 0.15} duration={0.8}>
               <div>
                 <h3 
-                  className="text-white text-xl font-bold mb-6"
+                  className="text-white text-lg sm:text-xl font-bold mb-4 sm:mb-6"
                   style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                 >
                   {column.title}
                 </h3>
                 {column.items ? (
-                  <ul className="space-y-4 text-white/70 text-sm" style={{ fontFamily: "'Inter', sans-serif" }}>
+                  <ul className="space-y-3 sm:space-y-4 text-white/70 text-sm" style={{ fontFamily: "'Inter', sans-serif" }}>
                     {column.items.map((item, i) => (
                       <li key={i}>{item}</li>
                     ))}
                   </ul>
                 ) : (
-                  <div className="space-y-4 text-white/70 text-sm leading-relaxed" style={{ fontFamily: "'Inter', sans-serif" }}>
+                  <div className="space-y-3 sm:space-y-4 text-white/70 text-sm leading-relaxed" style={{ fontFamily: "'Inter', sans-serif" }}>
                     {column.descriptions?.map((desc, i) => (
                       <p key={i}>{desc}</p>
                     ))}

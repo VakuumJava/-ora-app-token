@@ -22,11 +22,11 @@ const steps = [
 
 export function HowItWorks() {
   return (
-    <section className="relative py-12">
-      <div className="relative mx-auto max-w-6xl px-6">
+    <section className="relative py-8 sm:py-12">
+      <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
         <FadeIn delay={0.2} duration={0.8}>
           <h2 
-            className="mb-12 text-center text-3xl font-bold text-white"
+            className="mb-8 sm:mb-12 text-center text-2xl sm:text-3xl font-bold text-white"
             style={{
               fontFamily: "'Space Grotesk', sans-serif",
               letterSpacing: "-0.5px",
@@ -36,23 +36,23 @@ export function HowItWorks() {
           </h2>
         </FadeIn>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 justify-items-center">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 justify-items-center">
           {steps.map((step, index) => (
             <FadeIn key={index} delay={0.3 + index * 0.15} duration={0.8}>
               <Card
-                className="w-full max-w-[320px] h-[240px] rounded-[28px] border backdrop-blur-md hover:backdrop-blur-lg transition-all duration-300"
+                className="w-full max-w-[320px] min-h-[220px] sm:h-[240px] rounded-[24px] sm:rounded-[28px] border backdrop-blur-md hover:backdrop-blur-lg transition-all duration-300"
                 style={{
                   background: "rgba(0, 68, 255, 0.08)",
                   borderColor: "rgba(0, 136, 255, 0.3)",
                   boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.37)",
                 }}
               >
-              <CardContent className="p-6 pt-6 flex flex-col h-full">
-                <div className="mb-4 w-12 h-12 flex-shrink-0 rounded-full bg-blue-500/20 flex items-center justify-center backdrop-blur-sm">
-                  <Image src={step.icon} alt={step.title} width={24} height={24} className="object-contain" />
+              <CardContent className="p-5 sm:p-6 pt-5 sm:pt-6 flex flex-col h-full">
+                <div className="mb-3 sm:mb-4 w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 rounded-full bg-blue-500/20 flex items-center justify-center backdrop-blur-sm">
+                  <Image src={step.icon} alt={step.title} width={24} height={24} className="object-contain w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
                 <h3 
-                  className="mb-3 text-lg font-bold text-white"
+                  className="mb-2 sm:mb-3 text-base sm:text-lg font-bold text-white"
                   style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                 >
                   {step.title}

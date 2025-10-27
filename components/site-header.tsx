@@ -67,21 +67,21 @@ export function SiteHeader() {
     <header className={`fixed top-0 left-0 right-0 z-50 w-full backdrop-blur-xl bg-black/30 border-b border-white/10 transition-all duration-300 ${
       isScrolled ? 'bg-black/50' : 'bg-black/30'
     }`}>
-      <div className={`mx-auto flex max-w-[1920px] items-center justify-between px-6 md:px-12 transition-all duration-300 ${
-        isHomePage && !isScrolled ? 'h-20' : 'h-16'
+      <div className={`mx-auto flex max-w-[1920px] items-center justify-between px-4 sm:px-6 md:px-12 transition-all duration-300 ${
+        isHomePage && !isScrolled ? 'h-16 sm:h-20' : 'h-14 sm:h-16'
       }`}>
         {/* Logo */}
-        <Link href="/" className={`flex items-center gap-3 hover:opacity-80 transition-all duration-300 ${
+        <Link href="/" className={`flex items-center gap-2 sm:gap-3 hover:opacity-80 transition-all duration-300 ${
           isHomePage && !isScrolled ? 'scale-100' : 'scale-90'
         }`}>
           <div className={`relative transition-all duration-300 ${
-            isHomePage && !isScrolled ? 'w-[37px] h-[43px]' : 'w-[30px] h-[35px]'
+            isHomePage && !isScrolled ? 'w-[28px] h-[33px] sm:w-[37px] sm:h-[43px]' : 'w-[24px] h-[28px] sm:w-[30px] sm:h-[35px]'
           }`}>
             <Image src="/Logo.svg" alt="Qora" width={37} height={43} className="object-contain" />
           </div>
           <span
             className={`text-white font-normal transition-all duration-300 ${
-              isHomePage && !isScrolled ? 'text-[32px] md:text-[40px]' : 'text-[28px] md:text-[32px]'
+              isHomePage && !isScrolled ? 'text-[28px] sm:text-[32px] md:text-[40px]' : 'text-[24px] sm:text-[28px] md:text-[32px]'
             }`}
             style={{ fontFamily: "'MuseoModerno', sans-serif" }}
           >
@@ -309,6 +309,13 @@ export function SiteHeader() {
             Карта
           </Link>
           <Link
+            href="/profile"
+            className="px-4 py-3 text-white/80 hover:text-white hover:bg-white/5 rounded-lg transition-all"
+            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+          >
+            Профиль
+          </Link>
+          <Link
             href="/inventory"
             className="px-4 py-3 text-white/80 hover:text-white hover:bg-white/5 rounded-lg transition-all"
             style={{ fontFamily: "'Space Grotesk', sans-serif" }}
@@ -320,6 +327,20 @@ export function SiteHeader() {
           {user ? (
             <>
               <div className="border-t border-white/10 my-2" />
+              
+              {/* Wallet button in mobile menu */}
+              <button
+                onClick={() => {
+                  setIsWalletModalOpen(true)
+                  setIsMobileMenuOpen(false)
+                }}
+                className="px-4 py-3 text-left text-blue-400 hover:bg-white/5 rounded-lg transition-all flex items-center gap-2"
+                style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+              >
+                <Wallet className="w-4 h-4" />
+                Кошелек
+              </button>
+              
               <div className="px-4 py-3 text-white/60 text-sm">
                 Вы вошли как: {user.nickname}
               </div>

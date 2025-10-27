@@ -85,36 +85,36 @@ function LoginForm() {
     }
   }
   return (
-    <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4">
+    <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4 sm:p-6">
       {/* Отблики для глубины */}
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-1/4 left-10 w-96 h-96 bg-[#7FA0E3]/8 rounded-full blur-[120px]" />
-        <div className="absolute top-1/2 right-20 w-80 h-80 bg-[#A3C4F3]/8 rounded-full blur-[100px]" />
-        <div className="absolute bottom-32 left-1/3 w-96 h-96 bg-[#7FA0E3]/6 rounded-full blur-[130px]" />
+        <div className="absolute top-1/4 left-5 sm:left-10 w-64 h-64 sm:w-96 sm:h-96 bg-[#7FA0E3]/8 rounded-full blur-[100px] sm:blur-[120px]" />
+        <div className="absolute top-1/2 right-10 sm:right-20 w-60 h-60 sm:w-80 sm:h-80 bg-[#A3C4F3]/8 rounded-full blur-[80px] sm:blur-[100px]" />
+        <div className="absolute bottom-20 sm:bottom-32 left-1/4 sm:left-1/3 w-64 h-64 sm:w-96 sm:h-96 bg-[#7FA0E3]/6 rounded-full blur-[100px] sm:blur-[130px]" />
       </div>
 
       <CosmicBackground />
 
-      <div className="relative z-10 w-full max-w-sm">
+      <div className="relative z-10 w-full max-w-sm px-4 sm:px-0">
         {/* Кнопка назад */}
         <button
           onClick={() => router.push('/')}
-          className="mb-6 flex items-center gap-2 text-white/60 hover:text-white transition-colors group"
+          className="mb-4 sm:mb-6 flex items-center gap-2 text-white/60 hover:text-white transition-colors group"
         >
-          <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+          <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 group-hover:-translate-x-1 transition-transform" />
           <span className="text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
             Назад
           </span>
         </button>
 
-        <Link href="/" className="flex justify-center mb-8">
-          <span className="text-2xl font-bold text-white tracking-wider">QORA</span>
+        <Link href="/" className="flex justify-center mb-6 sm:mb-8">
+          <span className="text-xl sm:text-2xl font-bold text-white tracking-wider">QORA</span>
         </Link>
 
         <Card className="backdrop-blur-lg bg-white/5 border-white/10 shadow-2xl">
-          <CardHeader className="space-y-1 text-center">
-            <CardTitle className="text-xl text-white">Вход</CardTitle>
-            <CardDescription className="text-zinc-400 text-sm">Войдите в свой аккаунт</CardDescription>
+          <CardHeader className="space-y-1 text-center pb-4 sm:pb-6">
+            <CardTitle className="text-lg sm:text-xl text-white">Вход</CardTitle>
+            <CardDescription className="text-zinc-400 text-xs sm:text-sm">Войдите в свой аккаунт</CardDescription>
           </CardHeader>
           <CardContent>
             {successMessage && (

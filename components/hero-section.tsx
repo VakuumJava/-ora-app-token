@@ -4,11 +4,11 @@ import { FadeIn } from "@/components/fade-in"
 
 export function HeroSection() {
   return (
-    <section className="relative container mx-auto px-6 pt-50 md:pt-40">
+    <section className="relative container mx-auto px-4 sm:px-6 pt-24 sm:pt-32 md:pt-40">
       <div className="flex flex-col items-center justify-center max-w-2xl mx-auto">
         <FadeIn delay={0.2} duration={0.8}>
           <h1
-            className="text-[42px] leading-[50px] text-center font-bold mb-6 relative"
+            className="text-[28px] sm:text-[36px] md:text-[42px] leading-[36px] sm:leading-[44px] md:leading-[50px] text-center font-bold mb-4 sm:mb-6 relative px-4 sm:px-0"
             style={{
               fontFamily: "'Space Grotesk', sans-serif",
               background: "linear-gradient(180deg, #FFFFFF 0%, #8CB1FB 100%)",
@@ -20,7 +20,7 @@ export function HeroSection() {
           >
           
           <svg 
-            className="absolute -left-16 top-4 w-10 h-10 animate-pulse" 
+            className="absolute -left-8 sm:-left-12 md:-left-16 top-2 sm:top-3 md:top-4 w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 animate-pulse" 
             viewBox="0 0 43 43" 
             fill="none" 
             xmlns="http://www.w3.org/2000/svg"
@@ -31,7 +31,7 @@ export function HeroSection() {
 
           {/* Правая верхняя звезда */}
           <svg 
-            className="absolute -right-14 top-0 w-12 h-12 animate-pulse" 
+            className="absolute -right-8 sm:-right-12 md:-right-14 top-0 w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 animate-pulse" 
             viewBox="0 0 43 43" 
             fill="none" 
             xmlns="http://www.w3.org/2000/svg"
@@ -49,7 +49,7 @@ export function HeroSection() {
 
         <FadeIn delay={0.4} duration={0.8}>
           <p 
-            className="text-center text-white/70 text-base leading-relaxed mb-10 max-w-xl"
+            className="text-center text-white/70 text-sm sm:text-base leading-relaxed mb-8 sm:mb-10 max-w-xl px-4"
             style={{
               fontFamily: "'Inter', sans-serif",
             }}
@@ -64,7 +64,7 @@ export function HeroSection() {
           <Link href="/map">
             <Button 
               size="lg"
-              className="px-10 py-7 rounded-full text-lg font-semibold relative group overflow-hidden border-0 transition-all duration-500 hover:scale-105 hover:shadow-2xl"
+              className="px-8 sm:px-10 py-6 sm:py-7 rounded-full text-base sm:text-lg font-semibold relative group overflow-hidden border-0 transition-all duration-500 hover:scale-105 hover:shadow-2xl"
               style={{
                 background: "linear-gradient(135deg, #0900FF 0%, #25DBFF 100%)",
                 boxShadow: "0 0 60px rgba(9, 0, 255, 0.6), 0 0 100px rgba(37, 219, 255, 0.4), 0 8px 32px rgba(9, 0, 255, 0.5)",
