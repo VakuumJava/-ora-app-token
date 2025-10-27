@@ -24,7 +24,7 @@ export function HowItWorks() {
   return (
     <section className="relative py-8 sm:py-12">
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
-        <FadeIn delay={0.2} duration={0.8}>
+        <FadeIn delay={0} duration={0.3}>
           <h2 
             className="mb-8 sm:mb-12 text-center text-2xl sm:text-3xl font-bold text-white"
             style={{
@@ -38,7 +38,7 @@ export function HowItWorks() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 justify-items-center">
           {steps.map((step, index) => (
-            <FadeIn key={index} delay={0.3 + index * 0.15} duration={0.8}>
+            <FadeIn key={index} delay={0.05 + index * 0.05} duration={0.3}>
               <Card
                 className="w-full max-w-[320px] min-h-[220px] sm:h-[240px] rounded-[24px] sm:rounded-[28px] border backdrop-blur-md hover:backdrop-blur-lg transition-all duration-300"
                 style={{

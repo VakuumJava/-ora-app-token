@@ -41,7 +41,7 @@ export function InfoSection() {
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-10 md:gap-12 mt-8 sm:mt-10 md:mt-12">
           {infoColumns.map((column, index) => (
-            <FadeIn key={index} delay={0.2 + index * 0.15} duration={0.8}>
+            <FadeIn key={index} delay={0.05 + index * 0.05} duration={0.3}>
               <div>
                 <h3 
                   className="text-white text-lg sm:text-xl font-bold mb-4 sm:mb-6"

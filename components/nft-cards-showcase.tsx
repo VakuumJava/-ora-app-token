@@ -3,7 +3,7 @@ import { FadeIn } from "@/components/fade-in"
 
 export function NFTCardsShowcase() {
   return (
-    <FadeIn delay={0.3} duration={0.8}>
+    <FadeIn delay={0} duration={0.3}>
       <div className="relative w-full mx-auto px-4 sm:px-6">
         <div className="relative w-full flex items-center justify-center" style={{ minHeight: "150px" }}>
           <Image 

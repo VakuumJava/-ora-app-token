@@ -13,7 +13,7 @@ interface FadeInProps {
 export function FadeIn({ 
   children, 
   delay = 0, 
-  duration = 0.6,
+  duration = 0.3,
   direction = 'up',
   className = ''
 }: FadeInProps) {
@@ -45,13 +45,13 @@ export function FadeIn({
     if (!isVisible) {
       switch (direction) {
         case 'up':
-          return 'translateY(30px)'
+          return 'translateY(20px)'
         case 'down':
-          return 'translateY(-30px)'
+          return 'translateY(-20px)'
         case 'left':
-          return 'translateX(30px)'
+          return 'translateX(20px)'
         case 'right':
-          return 'translateX(-30px)'
+          return 'translateX(-20px)'
         default:
           return 'none'
       }
@@ -66,7 +66,7 @@ export function FadeIn({
       style={{
         opacity: isVisible ? 1 : 0,
         transform: getTransform(),
-        transition: `opacity ${duration}s ease-out ${delay}s, transform ${duration}s ease-out ${delay}s`,
+        transition: `opacity ${duration}s cubic-bezier(0.4, 0, 0.2, 1) ${delay}s, transform ${duration}s cubic-bezier(0.4, 0, 0.2, 1) ${delay}s`,
       }}
     >
       {children}

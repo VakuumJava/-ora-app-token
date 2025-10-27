@@ -6,7 +6,7 @@ export function HeroSection() {
   return (
     <section className="relative container mx-auto px-4 sm:px-6 pt-24 sm:pt-32 md:pt-40">
       <div className="flex flex-col items-center justify-center max-w-2xl mx-auto">
-        <FadeIn delay={0.2} duration={0.8}>
+        <FadeIn delay={0} duration={0.4}>
           <h1
             className="text-[28px] sm:text-[36px] md:text-[42px] leading-[36px] sm:leading-[44px] md:leading-[50px] text-center font-bold mb-4 sm:mb-6 relative px-4 sm:px-0"
             style={{
@@ -47,7 +47,7 @@ export function HeroSection() {
           </h1>
         </FadeIn>
 
-        <FadeIn delay={0.4} duration={0.8}>
+        <FadeIn delay={0.1} duration={0.4}>
           <p 
             className="text-center text-white/70 text-sm sm:text-base leading-relaxed mb-8 sm:mb-10 max-w-xl px-4"
             style={{
@@ -60,7 +60,7 @@ export function HeroSection() {
           </p>
         </FadeIn>
 
-        <FadeIn delay={0.6} duration={0.8}>
+        <FadeIn delay={0.2} duration={0.4}>
           <Link href="/map">
             <Button 
               size="lg"
