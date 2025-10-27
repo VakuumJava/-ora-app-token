@@ -9,7 +9,14 @@ import { generateVerificationToken, sendVerificationEmail } from '@/lib/email'
  */
 export async function POST(request: NextRequest) {
   try {
-    const token = request.cookies.get('accessToken')?.value
+    // Проверяем оба варианта названия cookie (accessToken и access_token)
+    const token = request.cookies.get('access_token')?.value || 
+                  request.cookies.get('accessToken')?.value
+
+    console.log('🔐 Change email attempt:', { 
+      hasToken: !!token,
+      cookies: request.cookies.getAll().map(c => c.name)
+    })
 
     if (!token) {
       return NextResponse.json({ error: 'Не авторизован' }, { status: 401 })
@@ -17,8 +24,11 @@ export async function POST(request: NextRequest) {
 
     const payload = verifyAccessToken(token)
     if (!payload) {
+      console.log('❌ Invalid token')
       return NextResponse.json({ error: 'Невалидный токен' }, { status: 401 })
     }
+
+    console.log('✅ User authenticated:', { userId: payload.userId, email: payload.email })
 
     const { newEmail } = await request.json()
 
@@ -58,14 +68,20 @@ export async function POST(request: NextRequest) {
     })
 
     // Отправка письма на новый email
-    await sendVerificationEmail(newEmail, verificationToken)
+    try {
+      await sendVerificationEmail(newEmail, verificationToken)
+      console.log('✅ Verification email sent to:', newEmail)
+    } catch (emailError) {
+      console.error('❌ Failed to send verification email:', emailError)
+      // Продолжаем выполнение, даже если email не отправился
+    }
 
     return NextResponse.json(
       { message: 'Письмо с подтверждением отправлено на новый email' },
       { status: 200 }
     )
   } catch (error) {
-    console.error('Error changing email:', error)
+    console.error('❌ Error changing email:', error)
     return NextResponse.json(
       { error: 'Ошибка при изменении email' },
       { status: 500 }

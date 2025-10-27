@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { isTokenExpired } from '@/lib/email'
+import { generateAccessToken, generateRefreshToken } from '@/lib/jwt'
 
 export async function GET(request: NextRequest) {
   try {
@@ -52,9 +53,45 @@ export async function GET(request: NextRequest) {
 
     console.log('✅ Email verified successfully for user:', user.email)
 
-    // Редирект на главную страницу с уведомлением об успехе
+    // Генерируем JWT токены для автоматического входа
+    const accessToken = generateAccessToken({
+      userId: user.id,
+      email: user.email,
+      nickname: user.nickname,
+    })
+
+    const refreshToken = generateRefreshToken({
+      userId: user.id,
+      email: user.email,
+      nickname: user.nickname,
+    })
+
+    console.log('🔑 JWT tokens generated, logging in user automatically')
+
+    // Создаем ответ с редиректом
     const redirectUrl = getRedirectUrl(request, '/?email_verified=true')
-    return NextResponse.redirect(redirectUrl)
+    const response = NextResponse.redirect(redirectUrl)
+
+    // Устанавливаем cookies с токенами
+    response.cookies.set('access_token', accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 15, // 15 минут
+      path: '/',
+    })
+
+    response.cookies.set('refresh_token', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7, // 7 дней
+      path: '/',
+    })
+
+    console.log('✅ User auto-logged in after email verification')
+
+    return response
   } catch (error) {
     console.error('❌ Email verification error:', error)
     const redirectUrl = getRedirectUrl(request, '/login?error=verification_failed')
