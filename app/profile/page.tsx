@@ -86,14 +86,14 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
       {/* Минимальные градиенты на фоне */}
-      <div className="fixed inset-0 pointer-events-none opacity-30">
-        <div className="absolute top-1/4 -right-48 w-96 h-96 bg-purple-500/20 rounded-full blur-[140px]" />
-        <div className="absolute bottom-1/4 -left-48 w-96 h-96 bg-blue-500/20 rounded-full blur-[140px]" />
+      <div className="fixed inset-0 pointer-events-none opacity-20 sm:opacity-30">
+        <div className="absolute top-1/4 -right-32 sm:-right-48 w-64 h-64 sm:w-96 sm:h-96 bg-purple-500/20 rounded-full blur-[100px] sm:blur-[140px]" />
+        <div className="absolute bottom-1/4 -left-32 sm:-left-48 w-64 h-64 sm:w-96 sm:h-96 bg-blue-500/20 rounded-full blur-[100px] sm:blur-[140px]" />
       </div>
 
       <SiteHeader />
 
-      <div className="pt-20 sm:pt-24 md:pt-32 pb-12 sm:pb-16 md:pb-20 relative z-10 px-4 sm:px-6">
+      <div className="pt-24 sm:pt-28 md:pt-32 pb-12 sm:pb-16 md:pb-20 relative z-10 px-4 sm:px-6">
         <div className="max-w-4xl mx-auto">
           
           {isLoading ? (
@@ -116,21 +116,21 @@ export default function ProfilePage() {
             </div>
           ) : (
             <>
-              {/* Карточка профиля - минималистичная */}
+                            {/* Карточка профиля - минималистичная */}
               {user && (
-                <div className="mb-4 sm:mb-6 rounded-2xl backdrop-blur-xl bg-white/5 border border-white/10 p-4 sm:p-6 md:p-8 transition-all hover:bg-white/[0.07]">
-                  <div className="flex items-center gap-3 sm:gap-4 md:gap-6">
+                <div className="mb-4 sm:mb-6 rounded-2xl backdrop-blur-xl bg-white/5 border border-white/10 p-5 sm:p-6 md:p-8 transition-all hover:bg-white/[0.07]">
+                  <div className="flex flex-col sm:flex-row items-center sm:items-center gap-4 sm:gap-6">
                     {/* Аватар */}
-                    <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-purple-500/20 to-blue-500/20 border border-white/10 flex items-center justify-center flex-shrink-0">
-                      <User className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 text-white/70" />
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-purple-500/20 to-blue-500/20 border border-white/10 flex items-center justify-center flex-shrink-0">
+                      <User className="w-8 h-8 sm:w-10 sm:h-10 text-white/70" />
                     </div>
                     
                     {/* Информация */}
-                    <div className="flex-1 min-w-0">
-                      <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-0.5 sm:mb-1 truncate">
+                    <div className="flex-1 text-center sm:text-left">
+                      <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1 break-words">
                         {user.nickname}
                       </h1>
-                      <p className="text-white/50 text-xs sm:text-sm truncate">
+                      <p className="text-white/50 text-xs sm:text-sm break-all">
                         {user.email}
                       </p>
                     </div>

@@ -108,17 +108,17 @@ export default function MapPage() {
       `}</style>
       <SiteHeader />
       
-      <div className="flex items-center justify-between gap-3 border-b border-white/10 bg-black/80 px-6 py-3 backdrop-blur-xl z-[1000] animate-slide-down">
-        <h1 className="text-xl font-semibold text-white flex items-center gap-2">
-          <MapPin className="h-5 w-5" />
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-3 border-b border-white/10 bg-black/80 px-3 sm:px-6 py-2 sm:py-3 backdrop-blur-xl z-[1000] animate-slide-down">
+        <h1 className="text-base sm:text-xl font-semibold text-white flex items-center gap-2">
+          <MapPin className="h-4 w-4 sm:h-5 sm:w-5" />
           Карта фрагментов
         </h1>
-        <div className="flex gap-2">
+        <div className="flex gap-1 sm:gap-2 flex-wrap">
           <Button 
             variant="outline" 
             size="sm" 
             onClick={() => setSelectedChain(null)}
-            className={`transition-smooth ${selectedChain === null ? "bg-blue-500/20 text-blue-300" : ""}`}
+            className={`transition-smooth text-xs sm:text-sm h-8 px-2 sm:px-3 ${selectedChain === null ? "bg-blue-500/20 text-blue-300" : ""}`}
           >
             Все
           </Button>
@@ -128,7 +128,7 @@ export default function MapPage() {
               variant="outline" 
               size="sm" 
               onClick={() => setSelectedChain(chain)}
-              className={`transition-smooth ${selectedChain === chain ? "bg-blue-500/20 text-blue-300" : ""}`}
+              className={`transition-smooth text-xs sm:text-sm h-8 px-2 sm:px-3 ${selectedChain === chain ? "bg-blue-500/20 text-blue-300" : ""}`}
             >
               {chain}
             </Button>
@@ -144,26 +144,26 @@ export default function MapPage() {
         />
         
         {selectedFragment && (
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-full max-w-md rounded-2xl border border-white/10 bg-black/90 backdrop-blur-2xl p-6 z-[1000] animate-slide-up shadow-2xl">
+          <div className="absolute bottom-3 sm:bottom-6 left-2 right-2 sm:left-1/2 sm:-translate-x-1/2 w-auto sm:w-full sm:max-w-md rounded-2xl border border-white/10 bg-black/95 backdrop-blur-2xl p-4 sm:p-6 z-[1000] animate-slide-up shadow-2xl mx-auto">
             <button 
               onClick={() => setSelectedFragment(null)}
-              className="absolute right-4 top-4 text-gray-400 hover:text-white transition-smooth hover:scale-110"
+              className="absolute right-3 top-3 sm:right-4 sm:top-4 text-gray-400 hover:text-white transition-smooth hover:scale-110 touch-manipulation"
             >
-              <X className="h-4 w-4" />
+              <X className="h-5 w-5 sm:h-4 sm:w-4" />
             </button>
             
             <div className="text-xs text-gray-400 mb-1 animate-fade-in">{selectedFragment.chain}</div>
-            <h3 className="text-xl font-bold text-white mb-3 animate-fade-in" style={{ animationDelay: '0.05s' }}>{selectedFragment.name}</h3>
+            <h3 className="text-lg sm:text-xl font-bold text-white mb-3 pr-8 animate-fade-in" style={{ animationDelay: '0.05s' }}>{selectedFragment.name}</h3>
             
-            <div className="flex gap-2 mb-4 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+            <div className="flex gap-2 mb-4 animate-fade-in flex-wrap" style={{ animationDelay: '0.1s' }}>
               <span 
-                className="rounded-full px-3 py-1 text-xs font-semibold text-white transition-smooth hover:scale-105"
+                className="rounded-full px-2.5 sm:px-3 py-1 text-xs font-semibold text-white transition-smooth hover:scale-105"
                 style={{ background: fragmentColors[selectedFragment.fragment] }}
               >
                 Фрагмент {selectedFragment.fragment}
               </span>
               <span 
-                className="rounded-full px-3 py-1 text-xs font-semibold text-white transition-smooth hover:scale-105"
+                className="rounded-full px-2.5 sm:px-3 py-1 text-xs font-semibold text-white transition-smooth hover:scale-105"
                 style={{ background: rarityColors[selectedFragment.rarity] }}
               >
                 {selectedFragment.rarity}
@@ -172,10 +172,10 @@ export default function MapPage() {
             
             <div className="space-y-2 text-sm text-gray-300 animate-fade-in" style={{ animationDelay: '0.15s' }}>
               <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-blue-400" />
-                <span>{selectedFragment.lat.toFixed(4)}, {selectedFragment.lng.toFixed(4)}</span>
+                <MapPin className="h-4 w-4 text-blue-400 flex-shrink-0" />
+                <span className="text-xs sm:text-sm">{selectedFragment.lat.toFixed(4)}, {selectedFragment.lng.toFixed(4)}</span>
               </div>
-              <div className="mt-3 rounded-lg bg-blue-500/10 border border-blue-500/20 p-3 transition-smooth hover:bg-blue-500/15">
+              <div className="mt-3 rounded-lg bg-blue-500/10 border border-blue-500/20 p-2.5 sm:p-3 transition-smooth hover:bg-blue-500/15">
                 <div className="text-xs text-blue-300 mb-1">Требования для чекина:</div>
                 <div className="text-xs text-gray-400">• Радиус: 5 метров</div>
                 <div className="text-xs text-gray-400">• Удержание: 3 секунды</div>
@@ -183,7 +183,7 @@ export default function MapPage() {
             </div>
             
             {selectedFragment.available && (
-              <Button className="w-full mt-4 bg-blue-600 hover:bg-blue-700 transition-smooth hover:scale-[1.02] animate-fade-in" style={{ animationDelay: '0.2s' }}>
+              <Button className="w-full mt-4 bg-blue-600 hover:bg-blue-700 transition-smooth hover:scale-[1.02] animate-fade-in text-sm sm:text-base h-10 sm:h-11 touch-manipulation" style={{ animationDelay: '0.2s' }}>
                 Начать чекин
               </Button>
             )}

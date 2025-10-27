@@ -98,6 +98,12 @@ function MapUpdater({ selectedChain }: { selectedChain: string | null }) {
 
 export default function MapComponent({ selectedChain, setSelectedFragment }: MapComponentProps) {
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null)
+  const [isMobile, setIsMobile] = useState(false)
+  
+  useEffect(() => {
+    // Определяем мобильное устройство
+    setIsMobile(window.innerWidth < 768)
+  }, [])
   
   useEffect(() => {
     // Получаем геолокацию пользователя
@@ -108,6 +114,11 @@ export default function MapComponent({ selectedChain, setSelectedFragment }: Map
         },
         (error) => {
           console.log("Геолокация недоступна:", error)
+        },
+        { 
+          enableHighAccuracy: false, // Быстрее на мобильных
+          timeout: 5000,
+          maximumAge: 10000
         }
       )
     }
@@ -146,13 +157,23 @@ export default function MapComponent({ selectedChain, setSelectedFragment }: Map
       
       <MapContainer
         center={[42.875964, 74.603701]}
-        zoom={12}
+        zoom={isMobile ? 11 : 12}
         style={{ width: "100%", height: "100%" }}
-        zoomControl={true}
+        zoomControl={!isMobile}
+        preferCanvas={true}
+        attributionControl={false}
+        zoomAnimation={!isMobile}
+        fadeAnimation={!isMobile}
+        markerZoomAnimation={!isMobile}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          maxZoom={18}
+          minZoom={isMobile ? 10 : 8}
+          updateWhenIdle={isMobile}
+          updateWhenZooming={!isMobile}
+          keepBuffer={isMobile ? 1 : 2}
         />
         
         <MapUpdater selectedChain={selectedChain} />

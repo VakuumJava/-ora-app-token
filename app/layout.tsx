@@ -13,6 +13,12 @@ export const metadata: Metadata = {
   title: "Qora — платформа геодропов и NFT-коллекций",
   description: "Находи лимитированные NFT-карточки в городе, собирай коллекции и торгуй на маркетплейсе",
   generator: "v0.app",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 5,
+    userScalable: true,
+  },
 }
 
 export default function RootLayout({

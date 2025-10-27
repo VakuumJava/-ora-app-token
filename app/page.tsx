@@ -23,8 +23,12 @@ function HomePageContent() {
   const [hasVisited, setHasVisited] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [showVerifiedAlert, setShowVerifiedAlert] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
+    // Определяем мобильное устройство для оптимизации
+    setIsMobile(window.innerWidth < 768)
+    
     // Проверяем параметр email_verified
     const emailVerified = searchParams.get('email_verified')
     if (emailVerified === 'true') {
@@ -64,13 +68,13 @@ function HomePageContent() {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Cosmic animated background */}
-      <CosmicBackground />
+      {/* Cosmic animated background - отключаем на мобильных для производительности */}
+      {!isMobile && <CosmicBackground />}
 
-      {/* White moving particles */}
-      <ParticlesBackground />
+      {/* White moving particles - отключаем на мобильных */}
+      {!isMobile && <ParticlesBackground />}
 
-      {/* Background gradient blurs - atmospheric effect */}
+      {/* Background gradient blurs - упрощаем на мобильных */}
       <BackgroundGradients />
 
       {/* Header */}
@@ -78,10 +82,10 @@ function HomePageContent() {
 
       {/* Уведомление об успешной верификации email */}
       {showVerifiedAlert && (
-        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-50 w-full max-w-md px-4 animate-in slide-in-from-top duration-500">
+        <div className="fixed top-20 sm:top-24 left-1/2 -translate-x-1/2 z-50 w-full max-w-md px-4 animate-in slide-in-from-top duration-500">
           <Alert className="backdrop-blur-xl bg-gradient-to-r from-green-950/90 to-emerald-950/90 border-2 border-green-500/50 shadow-2xl shadow-green-500/20">
             <CheckCircle className="h-5 w-5 text-green-400" />
-            <AlertDescription className="text-green-100 font-medium ml-2">
+            <AlertDescription className="text-green-100 font-medium ml-2 text-sm">
               🎉 Email успешно подтверждён! Добро пожаловать в Qora NFT!
             </AlertDescription>
           </Alert>
