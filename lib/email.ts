@@ -15,7 +15,15 @@ export function generateVerificationToken(): string {
  */
 export function getVerificationUrl(token: string): string {
   const baseUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-  return `${baseUrl}/api/auth/verify-email?token=${token}`
+  const verificationUrl = `${baseUrl}/api/auth/verify-email?token=${token}`
+  
+  console.log('🔗 Generated verification URL:', { 
+    baseUrl, 
+    token: `${token.substring(0, 10)}...`,
+    fullUrl: verificationUrl 
+  })
+  
+  return verificationUrl
 }
 
 /**

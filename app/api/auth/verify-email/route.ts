@@ -11,8 +11,15 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams
     const token = searchParams.get('token')
 
+    console.log('🔍 Email verification attempt:', { 
+      token: token ? `${token.substring(0, 10)}...` : 'missing',
+      url: request.url 
+    })
+
     if (!token) {
-      return NextResponse.redirect(new URL('/login?error=invalid_token', request.url))
+      console.log('❌ No token provided')
+      const redirectUrl = getRedirectUrl(request, '/login?error=invalid_token')
+      return NextResponse.redirect(redirectUrl)
     }
 
     // Поиск пользователя по токену
@@ -23,12 +30,18 @@ export async function GET(request: NextRequest) {
     })
 
     if (!user) {
-      return NextResponse.redirect(new URL('/login?error=invalid_token', request.url))
+      console.log('❌ User not found for token')
+      const redirectUrl = getRedirectUrl(request, '/login?error=invalid_token')
+      return NextResponse.redirect(redirectUrl)
     }
+
+    console.log('✅ User found:', { userId: user.id, email: user.email })
 
     // Проверка истечения токена
     if (user.verificationTokenExpiry && isTokenExpired(user.verificationTokenExpiry)) {
-      return NextResponse.redirect(new URL('/login?error=token_expired', request.url))
+      console.log('❌ Token expired:', user.verificationTokenExpiry)
+      const redirectUrl = getRedirectUrl(request, '/login?error=token_expired')
+      return NextResponse.redirect(redirectUrl)
     }
 
     // Подтверждение email
@@ -41,10 +54,33 @@ export async function GET(request: NextRequest) {
       },
     })
 
+    console.log('✅ Email verified successfully for user:', user.email)
+
     // Редирект на главную страницу с уведомлением об успехе
-    return NextResponse.redirect(new URL('/?email_verified=true', request.url))
+    const redirectUrl = getRedirectUrl(request, '/?email_verified=true')
+    return NextResponse.redirect(redirectUrl)
   } catch (error) {
-    console.error('Email verification error:', error)
-    return NextResponse.redirect(new URL('/login?error=verification_failed', request.url))
+    console.error('❌ Email verification error:', error)
+    const redirectUrl = getRedirectUrl(request, '/login?error=verification_failed')
+    return NextResponse.redirect(redirectUrl)
   }
+}
+
+/**
+ * Получает правильный URL для редиректа с учетом окружения
+ */
+function getRedirectUrl(request: NextRequest, path: string): URL {
+  // Используем заголовки для определения правильного хоста
+  const host = request.headers.get('host')
+  const protocol = request.headers.get('x-forwarded-proto') || 
+                  (host?.includes('localhost') ? 'http' : 'https')
+  
+  // Если есть APP_URL в переменных окружения - используем его
+  const baseUrl = process.env.APP_URL || 
+                  process.env.NEXT_PUBLIC_APP_URL || 
+                  `${protocol}://${host}`
+  
+  console.log('🔗 Redirect URL info:', { baseUrl, path, host, protocol })
+  
+  return new URL(path, baseUrl)
 }
