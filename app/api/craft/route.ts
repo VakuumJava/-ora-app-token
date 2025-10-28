@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { userInventory, userCards, shardInfo, cardInfo, cardModels, cardBackgrounds } from '@/lib/spawn-storage'
+import { userInventory, userCards, shardInfo, cardInfo, cardModels, cardBackgrounds, saveUserInventory, saveUserCards } from '@/lib/spawn-storage'
 
 /**
  * POST /api/craft - Скрафтить NFT карту из 3 осколков
  */
 export async function POST(request: NextRequest) {
   try {
-    const userId = "demo-user" // В реальности это user.userId из JWT
-    
     const body = await request.json()
-    const { shardIds } = body // Массив из 3 ID осколков для крафта
+    const { shardIds, userId: clientUserId } = body // Массив из 3 ID осколков для крафта
+    
+    // Используем userId из клиента
+    const userId = clientUserId || "demo-user"
     
     console.log('🔨 Запрос на крафт:', { userId, shardIds })
     
@@ -113,6 +114,10 @@ export async function POST(request: NextRequest) {
     }
     
     userCards.push(craftedCard)
+    
+    // Сохраняем изменения в localStorage
+    saveUserInventory()
+    saveUserCards()
     
     console.log('🎉 NFT карта создана:', craftedCard)
     console.log('  - Модель:', randomModel)

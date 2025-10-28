@@ -1,5 +1,32 @@
-// Глобальное хранилище точек спавна (в памяти для демонстрации)
-export const tempSpawnPoints: any[] = []
+// Глобальное хранилище точек спавна
+// Загружается из localStorage при инициализации
+function loadFromStorage<T>(key: string, defaultValue: T): T {
+  if (typeof window === 'undefined') return defaultValue;
+  
+  try {
+    const stored = localStorage.getItem(key);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (e) {
+    console.error(`Failed to load ${key} from storage:`, e);
+  }
+  
+  return defaultValue;
+}
+
+function saveToStorage<T>(key: string, value: T): void {
+  if (typeof window === 'undefined') return;
+  
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (e) {
+    console.error(`Failed to save ${key} to storage:`, e);
+  }
+}
+
+// Инициализация хранилищ с загрузкой из localStorage
+export const tempSpawnPoints: any[] = loadFromStorage('qora_spawn_points', [])
 
 // Соответствие между ID осколков и лейблами
 export const shardMapping: Record<string, string> = {
@@ -54,7 +81,7 @@ export interface CollectedShard {
   collectedAt: Date
 }
 
-export const userInventory: CollectedShard[] = []
+export const userInventory: CollectedShard[] = loadFromStorage('qora_user_inventory', [])
 
 // Хранилище собранных NFT карт
 export interface CollectedCard {
@@ -70,9 +97,9 @@ export interface CollectedCard {
   tokenId?: string // ID токена в блокчейне
 }
 
-export const userCards: CollectedCard[] = []
+export const userCards: CollectedCard[] = loadFromStorage('qora_user_cards', [])
 
-// Система пользователей (для демо)
+// Система пользователей
 export interface UserProfile {
   id: string
   username: string
@@ -81,14 +108,31 @@ export interface UserProfile {
   createdAt: Date
 }
 
-export const userProfiles: UserProfile[] = [
+export const userProfiles: UserProfile[] = loadFromStorage('qora_user_profiles', [
   {
     id: "demo-user",
     username: "demo_user",
     createdAt: new Date()
   }
-]
+])
 
 // Рандомные модели и фоны для карт
 export const cardModels = ["Hellfire", "Frostbite", "Shadow", "Celestial", "Inferno"]
 export const cardBackgrounds = ["Neon Blue", "Dark Purple", "Golden Sunset", "Mystic Green", "Blood Red"]
+
+// Функции для сохранения данных
+export function saveSpawnPoints() {
+  saveToStorage('qora_spawn_points', tempSpawnPoints);
+}
+
+export function saveUserInventory() {
+  saveToStorage('qora_user_inventory', userInventory);
+}
+
+export function saveUserCards() {
+  saveToStorage('qora_user_cards', userCards);
+}
+
+export function saveUserProfiles() {
+  saveToStorage('qora_user_profiles', userProfiles);
+}

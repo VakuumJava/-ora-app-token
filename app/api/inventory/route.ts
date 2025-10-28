@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { userInventory, shardInfo, userCards, cardInfo } from '@/lib/spawn-storage'
+import { userInventory, userCards, shardInfo, cardInfo, userProfiles } from '@/lib/spawn-storage'
 
 /**
  * GET /api/inventory
@@ -34,6 +34,10 @@ export async function GET() {
     // Получаем NFT карты из временного хранилища
     const userNFTCards = userCards.filter(item => item.userId === userId)
     
+    // Находим профиль пользователя для получения username
+    const userProfile = userProfiles.find(p => p.id === userId)
+    const username = userProfile?.username || userId
+    
     // Обогащаем данные информацией о картах
     const enrichedCards = userNFTCards.map(item => {
       const card = cardInfo[item.cardId as keyof typeof cardInfo]
@@ -48,7 +52,7 @@ export async function GET() {
         usedShardIds: item.usedShardIds,
         model: item.model,
         background: item.background,
-        owner: userId // Добавляем владельца
+        owner: username // Используем username
       }
     })
     

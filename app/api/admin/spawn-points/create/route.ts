@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { tempSpawnPoints, shardMapping } from '@/lib/spawn-storage'
+import { tempSpawnPoints, shardMapping, saveSpawnPoints } from '@/lib/spawn-storage'
 
 /**
  * POST /api/admin/spawn-points/create - Создание точки спавна админом
@@ -31,6 +31,7 @@ export async function POST(request: NextRequest) {
     }
 
     tempSpawnPoints.push(spawnPoint)
+    saveSpawnPoints() // Сохраняем в localStorage
 
     console.log('✅ Точка спавна создана:', spawnPoint)
     console.log('📍 Всего точек:', tempSpawnPoints.length)

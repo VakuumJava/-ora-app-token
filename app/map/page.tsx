@@ -7,6 +7,7 @@ import dynamic from "next/dynamic"
 import { useState, useEffect } from "react"
 import { CheckinModal } from "@/components/checkin-modal"
 import Link from "next/link"
+import { getUserSession } from "@/lib/user-session"
 
 const MapComponent = dynamic(() => import("@/components/map-component"), { 
   ssr: false,
@@ -67,6 +68,28 @@ export default function MapPage() {
   const [isLoadingSpawns, setIsLoadingSpawns] = useState(true)
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null)
   const [showCheckinModal, setShowCheckinModal] = useState(false)
+  const [userId, setUserId] = useState<string>("")
+  const [collectedSpawnIds, setCollectedSpawnIds] = useState<string[]>([])
+
+  // Получаем текущего пользователя
+  useEffect(() => {
+    const session = getUserSession()
+    setUserId(session.userId)
+    
+    // Загружаем собранные осколки пользователя из localStorage
+    const inventory = localStorage.getItem('qora_user_inventory')
+    if (inventory) {
+      try {
+        const parsed = JSON.parse(inventory)
+        const userShards = parsed.filter((s: any) => s.userId === session.userId)
+        const spawnIds = userShards.map((s: any) => s.spawnPointId)
+        setCollectedSpawnIds(spawnIds)
+        console.log('🗺️ Собранные точки пользователя:', spawnIds)
+      } catch (e) {
+        console.error('Error parsing inventory:', e)
+      }
+    }
+  }, [])
 
   // Загружаем точки спавна из API
   useEffect(() => {
@@ -315,7 +338,7 @@ export default function MapPage() {
         <MapComponent 
           selectedFragment={selectedFragment}
           setSelectedFragment={setSelectedFragment}
-          spawnPoints={spawnPoints}
+          spawnPoints={spawnPoints.filter(sp => !collectedSpawnIds.includes(sp.id))}
           isLoadingSpawns={isLoadingSpawns}
           userLocation={userLocation}
         />
@@ -324,6 +347,7 @@ export default function MapPage() {
           <CheckinModal
             fragment={selectedFragment}
             userLocation={userLocation}
+            userId={userId}
             onClose={() => {
               setSelectedFragment(null)
               setShowCheckinModal(false)
@@ -331,6 +355,10 @@ export default function MapPage() {
             onSuccess={() => {
               setShowCheckinModal(false)
               setSelectedFragment(null)
+              
+              // Добавляем собранный spawn point в список
+              setCollectedSpawnIds(prev => [...prev, selectedFragment.id])
+              
               // Перезагружаем точки спавна
               fetch('/api/spawn-points')
                 .then(res => res.json())

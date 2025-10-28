@@ -9,11 +9,12 @@ import { calculateDistance } from "@/lib/geo-utils"
 interface CheckinModalProps {
   fragment: FragmentSpawn
   userLocation: [number, number] | null
+  userId: string
   onClose: () => void
   onSuccess: () => void
 }
 
-export function CheckinModal({ fragment, userLocation, onClose, onSuccess }: CheckinModalProps) {
+export function CheckinModal({ fragment, userLocation, userId, onClose, onSuccess }: CheckinModalProps) {
   const [isChecking, setIsChecking] = useState(false)
   const [holdProgress, setHoldProgress] = useState(0)
   const [error, setError] = useState("")
@@ -78,7 +79,8 @@ export function CheckinModal({ fragment, userLocation, onClose, onSuccess }: Che
             spawnPointId: fragment.id,
             userLat: userLocation[0],
             userLng: userLocation[1],
-            accuracy: 10 // TODO: получать реальную точность GPS
+            accuracy: 10, // TODO: получать реальную точность GPS
+            userId // Передаем userId
           })
         })
 

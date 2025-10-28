@@ -1,8 +1,9 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { X, Sparkles, Loader2 } from 'lucide-react'
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { X, Loader2, Sparkles } from "lucide-react"
+import { getUserSession } from "@/lib/user-session"
 
 interface Shard {
   id: string
@@ -44,10 +45,15 @@ export function CraftModal({ shards, onClose, onSuccess }: CraftModalProps) {
     setError(null)
 
     try {
+      const userId = getUserSession().userId
+      
       const response = await fetch('/api/craft', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ shardIds: selectedShards })
+        body: JSON.stringify({ 
+          shardIds: selectedShards,
+          userId 
+        })
       })
 
       const data = await response.json()

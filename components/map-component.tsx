@@ -55,14 +55,14 @@ const userIcon = L.divIcon({
 })
 
 // Создаём кастомные иконки для каждого осколка с реальными изображениями
-const createFragmentIcon = (fragment: string) => {
+const createFragmentIcon = (shardId: string) => {
   const imageMap: Record<string, string> = {
-    "1": "/elements/shard-1.png",
-    "2": "/elements/shard-2.png", 
-    "3": "/elements/shard-3.png",
+    "shard-1": "/elements/shard-1.png",
+    "shard-2": "/elements/shard-2.png", 
+    "shard-3": "/elements/shard-3.png",
   }
   
-  const imagePath = imageMap[fragment] || "/elements/shard-1.png"
+  const imagePath = imageMap[shardId] || "/elements/shard-1.png"
   
   return L.divIcon({
     className: "custom-fragment-marker",
@@ -74,7 +74,7 @@ const createFragmentIcon = (fragment: string) => {
     ">
       <img 
         src="${imagePath}" 
-        alt="Осколок ${fragment}"
+        alt="Осколок ${shardId}"
         style="
           width: 100%;
           height: 100%;
@@ -215,7 +215,7 @@ export default function MapComponent({ setSelectedFragment, spawnPoints, isLoadi
           <Marker
             key={spawn.id}
             position={[spawn.lat, spawn.lng]}
-            icon={createFragmentIcon(spawn.fragment)}
+            icon={createFragmentIcon(spawn.shardId)}
             eventHandlers={{
               click: () => setSelectedFragment(spawn)
             }}

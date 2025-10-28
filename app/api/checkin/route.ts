@@ -1,26 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserFromCookies } from '@/lib/jwt'
 import { calculateDistance } from '@/lib/geo-utils'
-import { tempSpawnPoints, shardInfo, userInventory } from '@/lib/spawn-storage'
+import { tempSpawnPoints, shardInfo, userInventory, saveUserInventory } from '@/lib/spawn-storage'
 
 /**
  * POST /api/checkin - Чекин пользователя на точке спавна
  */
 export async function POST(request: NextRequest) {
   try {
-    // Проверяем авторизацию (пока без реальной проверки для демо)
-    // const user = await getUserFromCookies()
-    // if (!user || !user.userId) {
-    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    // }
-
-    // Для демо используем фиксированный userId
-    const userId = "demo-user" // В реальности это user.userId из JWT
-
     const body = await request.json()
-    const { spawnPointId, userLat, userLng, accuracy } = body
+    const { spawnPointId, userLat, userLng, accuracy, userId: clientUserId } = body
 
-    console.log('🎯 Чекин запрос:', { spawnPointId, userLat, userLng })
+    // Используем userId из клиента (переданный из user-session)
+    const userId = clientUserId || "demo-user"
+
+    console.log('🎯 Чекин запрос:', { spawnPointId, userLat, userLng, userId })
 
     if (!spawnPointId || userLat === undefined || userLng === undefined) {
       return NextResponse.json(
@@ -126,6 +120,7 @@ export async function POST(request: NextRequest) {
     }
     
     userInventory.push(collectedShard)
+    saveUserInventory() // Сохраняем в localStorage
     
     console.log('💾 Осколок сохранен в инвентарь:', collectedShard)
     console.log('📦 Всего осколков в инвентаре:', userInventory.length)
