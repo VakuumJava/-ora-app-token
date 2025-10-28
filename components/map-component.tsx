@@ -1,7 +1,7 @@
 "use client"
 
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from "react-leaflet"
-import { fragmentSpawns, fragmentColors, type FragmentSpawn } from "@/app/map/page"
+import { fragmentSpawns, fragmentColors, fragmentImages, type FragmentSpawn } from "@/app/map/page"
 import L from "leaflet"
 import "leaflet/dist/leaflet.css"
 import { useEffect, useState } from "react"
@@ -54,49 +54,46 @@ const userIcon = L.divIcon({
   iconAnchor: [20, 20],
 })
 
-// Создаём кастомные иконки для каждого фрагмента
-const createFragmentIcon = (color: string) => {
+// Создаём кастомные иконки для каждого осколка с реальными изображениями
+const createFragmentIcon = (fragment: string) => {
+  const imageMap: Record<string, string> = {
+    "1": "/elements/shard-1.png",
+    "2": "/elements/shard-2.png", 
+    "3": "/elements/shard-3.png",
+  }
+  
+  const imagePath = imageMap[fragment] || "/elements/shard-1.png"
+  
   return L.divIcon({
     className: "custom-fragment-marker",
     html: `<div style="
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      background: ${color};
-      border: 3px solid white;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-    "></div>`,
-    iconSize: [30, 30],
-    iconAnchor: [15, 15],
+      width: 50px;
+      height: 50px;
+      position: relative;
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
+    ">
+      <img 
+        src="${imagePath}" 
+        alt="Осколок ${fragment}"
+        style="
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+          animation: float 3s ease-in-out infinite;
+        "
+      />
+    </div>`,
+    iconSize: [50, 50],
+    iconAnchor: [25, 25],
   })
 }
 
 interface MapComponentProps {
-  selectedChain: "TON" | "ETH" | "BASE" | null
   selectedFragment: FragmentSpawn | null
   setSelectedFragment: (fragment: FragmentSpawn | null) => void
 }
 
-function MapUpdater({ selectedChain }: { selectedChain: string | null }) {
-  const map = useMap()
-  
-  useEffect(() => {
-    // Обновляем вид карты при изменении фильтра
-    if (selectedChain) {
-      const filtered = fragmentSpawns.filter(f => f.chain === selectedChain)
-      if (filtered.length > 0) {
-        const bounds = L.latLngBounds(filtered.map(f => [f.lat, f.lng]))
-        map.fitBounds(bounds, { padding: [50, 50] })
-      }
-    } else {
-      map.setView([42.875964, 74.603701], 12)
-    }
-  }, [selectedChain, map])
-  
-  return null
-}
-
-export default function MapComponent({ selectedChain, setSelectedFragment }: MapComponentProps) {
+export default function MapComponent({ setSelectedFragment }: MapComponentProps) {
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null)
   const [isMobile, setIsMobile] = useState(false)
   
@@ -123,10 +120,6 @@ export default function MapComponent({ selectedChain, setSelectedFragment }: Map
       )
     }
   }, [])
-  
-  const filtered = selectedChain 
-    ? fragmentSpawns.filter(f => f.chain === selectedChain)
-    : fragmentSpawns
 
   return (
     <>
@@ -141,6 +134,21 @@ export default function MapComponent({ selectedChain, setSelectedFragment }: Map
           background: transparent;
           border: none;
         }
+        
+        @keyframes float {
+          0%, 100% {
+            transform: translateY(0px);
+          }
+          50% {
+            transform: translateY(-10px);
+          }
+        }
+        
+        .custom-fragment-marker:hover {
+          transform: scale(1.1);
+          transition: transform 0.2s ease;
+        }
+        
         .leaflet-popup-content-wrapper {
           background: rgba(0, 0, 0, 0.9);
           color: white;
@@ -176,14 +184,12 @@ export default function MapComponent({ selectedChain, setSelectedFragment }: Map
           keepBuffer={isMobile ? 1 : 2}
         />
         
-        <MapUpdater selectedChain={selectedChain} />
-        
-        {/* Маркеры фрагментов */}
-        {filtered.map((spawn) => (
+        {/* Маркеры осколков */}
+        {fragmentSpawns.map((spawn) => (
           <Marker
             key={spawn.id}
             position={[spawn.lat, spawn.lng]}
-            icon={createFragmentIcon(fragmentColors[spawn.fragment])}
+            icon={createFragmentIcon(spawn.fragment)}
             eventHandlers={{
               click: () => setSelectedFragment(spawn)
             }}
@@ -191,7 +197,7 @@ export default function MapComponent({ selectedChain, setSelectedFragment }: Map
             <Popup>
               <div style={{ padding: "8px" }}>
                 <strong>{spawn.name}</strong><br />
-                Фрагмент {spawn.fragment} • {spawn.rarity}<br />
+                Осколок {spawn.fragment} • {spawn.rarity}<br />
                 <span style={{ color: spawn.available ? "#10b981" : "#ef4444" }}>
                   {spawn.available ? "Доступно" : "Собрано"}
                 </span>
