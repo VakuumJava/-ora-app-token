@@ -14,6 +14,9 @@ export async function POST(request: NextRequest) {
     //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     // }
 
+    // Для демо используем фиксированный userId
+    const userId = "demo-user" // В реальности это user.userId из JWT
+
     const body = await request.json()
     const { spawnPointId, userLat, userLng, accuracy } = body
 
@@ -52,6 +55,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ 
         error: 'Spawn point has expired',
         message: 'Срок действия этой точки истек'
+      }, { status: 400 })
+    }
+
+    // Проверяем, не собирал ли пользователь уже осколок с этой точки
+    const alreadyCollected = userInventory.find(
+      item => item.userId === userId && item.spawnPointId === spawnPointId
+    )
+    
+    if (alreadyCollected) {
+      console.log('⚠️ Пользователь уже собирал осколок с этой точки')
+      return NextResponse.json({ 
+        error: 'Already collected',
+        message: '❌ Вы уже собрали осколок с этой точки!'
       }, { status: 400 })
     }
 
@@ -97,8 +113,7 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ Чекин успешен! Осколок:', shard.label)
 
-    // Сохраняем осколок в инвентарь (для демо используем фиксированный userId)
-    const userId = "demo-user" // В реальности это user.userId из JWT
+    // Сохраняем осколок в инвентарь
     const collectedId = `collected-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
     
     const collectedShard = {
