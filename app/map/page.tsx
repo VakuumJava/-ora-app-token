@@ -2,10 +2,11 @@
 
 import { SiteHeader } from "@/components/site-header"
 import { Button } from "@/components/ui/button"
-import { MapPin, X, MapPinOff } from "lucide-react"
+import { MapPin, X, MapPinOff, ArrowLeft } from "lucide-react"
 import dynamic from "next/dynamic"
 import { useState, useEffect } from "react"
 import { CheckinModal } from "@/components/checkin-modal"
+import Link from "next/link"
 
 const MapComponent = dynamic(() => import("@/components/map-component"), { 
   ssr: false,
@@ -298,6 +299,16 @@ export default function MapPage() {
           <MapPin className="h-4 w-4 sm:h-5 sm:w-5" />
           Карта осколков
         </h1>
+        <Link href="/">
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border-white/10 text-white"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            В меню
+          </Button>
+        </Link>
       </div>
       
       <div className="relative flex-1">

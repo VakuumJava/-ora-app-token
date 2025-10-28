@@ -26,3 +26,15 @@ export const shardInfo = {
     name: "Осколок C"
   }
 }
+
+// Хранилище инвентаря пользователей (в памяти для демонстрации)
+// В реальном приложении это должно быть в БД
+export interface CollectedShard {
+  id: string // ID записи в инвентаре
+  userId: string // ID пользователя (для демо используем "demo-user")
+  shardId: string // "shard-1", "shard-2", "shard-3"
+  spawnPointId: string // ID точки спавна, откуда собран
+  collectedAt: Date
+}
+
+export const userInventory: CollectedShard[] = []

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserFromCookies } from '@/lib/jwt'
 import { calculateDistance } from '@/lib/geo-utils'
-import { tempSpawnPoints, shardInfo } from '@/lib/spawn-storage'
+import { tempSpawnPoints, shardInfo, userInventory } from '@/lib/spawn-storage'
 
 /**
  * POST /api/checkin - Чекин пользователя на точке спавна
@@ -97,16 +97,33 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ Чекин успешен! Осколок:', shard.label)
 
-    // Возвращаем успешный результат (без сохранения в БД для демо)
+    // Сохраняем осколок в инвентарь (для демо используем фиксированный userId)
+    const userId = "demo-user" // В реальности это user.userId из JWT
+    const collectedId = `collected-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    
+    const collectedShard = {
+      id: collectedId,
+      userId,
+      shardId: spawnPoint.shardId,
+      spawnPointId: spawnPoint.id,
+      collectedAt: new Date()
+    }
+    
+    userInventory.push(collectedShard)
+    
+    console.log('💾 Осколок сохранен в инвентарь:', collectedShard)
+    console.log('📦 Всего осколков в инвентаре:', userInventory.length)
+
+    // Возвращаем успешный результат
     return NextResponse.json({
       success: true,
       message: '🎉 Осколок успешно собран!',
       shard: {
-        id: spawnPoint.id,
+        id: collectedId,
         label: shard.label,
         cardName: shard.name,
         imageUrl: shard.imageUrl,
-        collectedAt: new Date()
+        collectedAt: collectedShard.collectedAt
       }
     })
   } catch (error) {

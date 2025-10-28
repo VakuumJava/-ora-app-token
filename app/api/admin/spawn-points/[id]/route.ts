@@ -6,10 +6,10 @@ import { tempSpawnPoints } from '@/lib/spawn-storage'
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params
+    const { id } = await context.params
     
     const index = tempSpawnPoints.findIndex((sp: any) => sp.id === id)
     
