@@ -8,8 +8,14 @@ import { verifyAccessToken } from '@/lib/jwt'
  */
 export async function DELETE(request: NextRequest) {
   try {
-    // Получаем токен из cookies
-    const token = request.cookies.get('accessToken')?.value
+    // Проверяем оба варианта названия cookie (accessToken и access_token)
+    const token = request.cookies.get('access_token')?.value || 
+                  request.cookies.get('accessToken')?.value
+
+    console.log('🔐 Delete account attempt:', { 
+      hasToken: !!token,
+      cookies: request.cookies.getAll().map(c => c.name)
+    })
 
     if (!token) {
       return NextResponse.json({ error: 'Не авторизован' }, { status: 401 })
@@ -18,8 +24,11 @@ export async function DELETE(request: NextRequest) {
     // Проверяем токен
     const payload = verifyAccessToken(token)
     if (!payload) {
+      console.log('❌ Invalid token')
       return NextResponse.json({ error: 'Невалидный токен' }, { status: 401 })
     }
+
+    console.log('⚠️ Deleting account:', { userId: payload.userId, email: payload.email })
 
     const userId = payload.userId
 
@@ -46,18 +55,22 @@ export async function DELETE(request: NextRequest) {
       })
     })
 
-    // Очищаем cookies
+    // Очищаем cookies (оба варианта названий)
     const response = NextResponse.json(
       { message: 'Аккаунт успешно удалён' },
       { status: 200 }
     )
 
+    response.cookies.delete('access_token')
+    response.cookies.delete('refresh_token')
     response.cookies.delete('accessToken')
     response.cookies.delete('refreshToken')
 
+    console.log('✅ Account deleted successfully:', { userId })
+
     return response
   } catch (error) {
-    console.error('Error deleting account:', error)
+    console.error('❌ Error deleting account:', error)
     return NextResponse.json(
       { error: 'Ошибка при удалении аккаунта' },
       { status: 500 }

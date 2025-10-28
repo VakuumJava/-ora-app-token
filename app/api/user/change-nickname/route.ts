@@ -8,7 +8,14 @@ import { verifyAccessToken } from '@/lib/jwt'
  */
 export async function POST(request: NextRequest) {
   try {
-    const token = request.cookies.get('accessToken')?.value
+    // Проверяем оба варианта названия cookie (accessToken и access_token)
+    const token = request.cookies.get('access_token')?.value || 
+                  request.cookies.get('accessToken')?.value
+
+    console.log('🔐 Change nickname attempt:', { 
+      hasToken: !!token,
+      cookies: request.cookies.getAll().map(c => c.name)
+    })
 
     if (!token) {
       return NextResponse.json({ error: 'Не авторизован' }, { status: 401 })
@@ -16,8 +23,11 @@ export async function POST(request: NextRequest) {
 
     const payload = verifyAccessToken(token)
     if (!payload) {
+      console.log('❌ Invalid token')
       return NextResponse.json({ error: 'Невалидный токен' }, { status: 401 })
     }
+
+    console.log('✅ User authenticated:', { userId: payload.userId, currentNickname: payload.nickname })
 
     const { newNickname } = await request.json()
 
@@ -59,12 +69,18 @@ export async function POST(request: NextRequest) {
       data: { nickname: newNickname },
     })
 
+    console.log('✅ Nickname changed successfully:', { 
+      userId: payload.userId, 
+      oldNickname: payload.nickname, 
+      newNickname 
+    })
+
     return NextResponse.json(
       { message: 'Никнейм успешно изменён', newNickname },
       { status: 200 }
     )
   } catch (error) {
-    console.error('Error changing nickname:', error)
+    console.error('❌ Error changing nickname:', error)
     return NextResponse.json(
       { error: 'Ошибка при изменении никнейма' },
       { status: 500 }
