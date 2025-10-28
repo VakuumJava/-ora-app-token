@@ -67,10 +67,10 @@ const createFragmentIcon = (fragment: string) => {
   return L.divIcon({
     className: "custom-fragment-marker",
     html: `<div style="
-      width: 50px;
-      height: 50px;
+      width: 80px;
+      height: 80px;
       position: relative;
-      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.6));
     ">
       <img 
         src="${imagePath}" 
@@ -83,8 +83,8 @@ const createFragmentIcon = (fragment: string) => {
         "
       />
     </div>`,
-    iconSize: [50, 50],
-    iconAnchor: [25, 25],
+    iconSize: [80, 80],
+    iconAnchor: [40, 40],
   })
 }
 

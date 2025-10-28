@@ -2,9 +2,9 @@
 
 import { SiteHeader } from "@/components/site-header"
 import { Button } from "@/components/ui/button"
-import { MapPin, X } from "lucide-react"
+import { MapPin, X, MapPinOff } from "lucide-react"
 import dynamic from "next/dynamic"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 const MapComponent = dynamic(() => import("@/components/map-component"), { 
   ssr: false,
@@ -58,6 +58,100 @@ export const rarityColors: Record<Rarity, string> = {
 
 export default function MapPage() {
   const [selectedFragment, setSelectedFragment] = useState<FragmentSpawn | null>(null)
+  const [hasGeolocation, setHasGeolocation] = useState<boolean | null>(null)
+  const [isCheckingLocation, setIsCheckingLocation] = useState(true)
+
+  useEffect(() => {
+    // Проверяем доступность геолокации при загрузке страницы
+    if (!navigator.geolocation) {
+      setHasGeolocation(false)
+      setIsCheckingLocation(false)
+      return
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setHasGeolocation(true)
+        setIsCheckingLocation(false)
+      },
+      (error) => {
+        console.error("Ошибка получения геолокации:", error)
+        setHasGeolocation(false)
+        setIsCheckingLocation(false)
+      },
+      { 
+        enableHighAccuracy: false,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    )
+  }, [])
+
+  const requestGeolocation = () => {
+    setIsCheckingLocation(true)
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setHasGeolocation(true)
+        setIsCheckingLocation(false)
+      },
+      (error) => {
+        console.error("Ошибка получения геолокации:", error)
+        setHasGeolocation(false)
+        setIsCheckingLocation(false)
+        alert("Не удалось получить доступ к геолокации. Пожалуйста, разрешите доступ в настройках браузера.")
+      },
+      { 
+        enableHighAccuracy: false,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    )
+  }
+
+  // Показываем экран запроса геолокации
+  if (isCheckingLocation) {
+    return (
+      <div className="flex h-screen flex-col bg-black">
+        <SiteHeader />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center text-white px-6 max-w-md">
+            <div className="mb-6 h-12 w-12 animate-spin rounded-full border-4 border-gray-300 border-t-blue-500 mx-auto" />
+            <h2 className="text-2xl font-bold mb-4">Проверка геолокации</h2>
+            <p className="text-gray-400">Пожалуйста, подождите...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Показываем экран ошибки, если геолокация недоступна
+  if (hasGeolocation === false) {
+    return (
+      <div className="flex h-screen flex-col bg-black">
+        <SiteHeader />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center text-white px-6 max-w-md">
+            <MapPinOff className="h-20 w-20 text-red-500 mx-auto mb-6" />
+            <h2 className="text-2xl font-bold mb-4">Требуется геолокация</h2>
+            <p className="text-gray-400 mb-6">
+              Для использования карты необходимо разрешить доступ к вашей геолокации. 
+              Это нужно для отображения осколков поблизости и возможности их сбора.
+            </p>
+            <Button 
+              onClick={requestGeolocation}
+              className="w-full bg-blue-600 hover:bg-blue-700 transition-all"
+            >
+              <MapPin className="h-5 w-5 mr-2" />
+              Разрешить доступ к геолокации
+            </Button>
+            <p className="text-xs text-gray-500 mt-4">
+              Если кнопка не работает, разрешите геолокацию в настройках браузера
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex h-screen flex-col bg-black">
