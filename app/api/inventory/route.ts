@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { userInventory, shardInfo } from '@/lib/spawn-storage'
+import { userInventory, shardInfo, userCards, cardInfo } from '@/lib/spawn-storage'
 
 /**
  * GET /api/inventory
@@ -31,6 +31,35 @@ export async function GET() {
     
     console.log(`📦 Запрос инвентаря для ${userId}: ${enrichedShards.length} осколков`)
     
+    // Получаем NFT карты из временного хранилища
+    const userNFTCards = userCards.filter(item => item.userId === userId)
+    
+    // Обогащаем данные информацией о картах
+    const enrichedCards = userNFTCards.map(item => {
+      const card = cardInfo[item.cardId as keyof typeof cardInfo]
+      return {
+        id: item.id,
+        cardId: item.cardId,
+        name: card?.name || "Неизвестная карта",
+        description: card?.description || "",
+        imageUrl: card?.imageUrl || "",
+        rarity: card?.rarity || "common",
+        craftedAt: item.craftedAt,
+        usedShardIds: item.usedShardIds
+      }
+    })
+    
+    console.log(`🎴 Карт у пользователя: ${enrichedCards.length}`)
+    
+    // Подсчитываем карты по редкости
+    const cardsByRarity = {
+      common: enrichedCards.filter(c => (c.rarity as string) === 'common').length,
+      uncommon: enrichedCards.filter(c => (c.rarity as string) === 'uncommon').length,
+      rare: enrichedCards.filter(c => (c.rarity as string) === 'rare').length,
+      epic: enrichedCards.filter(c => (c.rarity as string) === 'epic').length,
+      legendary: enrichedCards.filter(c => (c.rarity as string) === 'legendary').length,
+    }
+    
     // Возвращаем структуру совместимую со старым API
     return NextResponse.json({
       fragments: {
@@ -45,15 +74,9 @@ export async function GET() {
         items: enrichedShards
       },
       cards: {
-        total: 0,
-        byRarity: {
-          common: 0,
-          uncommon: 0,
-          rare: 0,
-          epic: 0,
-          legendary: 0,
-        },
-        items: []
+        total: enrichedCards.length,
+        byRarity: cardsByRarity,
+        items: enrichedCards
       }
     })
   } catch (error) {

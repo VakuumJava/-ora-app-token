@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation"
 import { SiteHeader } from "@/components/site-header"
 import { CosmicBackground } from "@/components/cosmic-background"
 import { ParticlesBackground } from "@/components/particles-background"
-import { X, Loader2 } from "lucide-react"
+import { CraftModal } from "@/components/craft-modal"
+import { X, Loader2, Sparkles } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 interface InventoryData {
   fragments: {
@@ -103,6 +105,8 @@ export default function InventoryPage() {
   const [inventory, setInventory] = useState<InventoryData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showCraftModal, setShowCraftModal] = useState(false)
+  const [activeTab, setActiveTab] = useState<'fragments' | 'cards'>('fragments')
   const router = useRouter()
 
   useEffect(() => {
@@ -190,6 +194,20 @@ export default function InventoryPage() {
     : []
 
   const hasAnyItems = (inventory?.fragments.total || 0) + (inventory?.cards.total || 0) > 0
+  const hasFragments = (inventory?.fragments.total || 0) > 0
+  const hasCards = (inventory?.cards.total || 0) > 0
+
+  // Обработчик успешного крафта
+  const handleCraftSuccess = () => {
+    // Перезагружаем инвентарь
+    fetch('/api/inventory')
+      .then(res => res.json())
+      .then(data => {
+        console.log('📦 Инвентарь перезагружен после крафта:', data)
+        setInventory(data)
+      })
+      .catch(console.error)
+  }
 
   return (
     <div className="min-h-screen bg-black text-white relative overflow-hidden">
@@ -198,87 +216,196 @@ export default function InventoryPage() {
 
       <SiteHeader />
 
+      {/* Craft Modal */}
+      {showCraftModal && inventory?.fragments.items && (
+        <CraftModal
+          shards={inventory.fragments.items as any}
+          onClose={() => setShowCraftModal(false)}
+          onSuccess={handleCraftSuccess}
+        />
+      )}
+
       {/* Hero Section */}
-      <section className="pt-32 pb-16 relative z-10 px-6">
+      <section className="pt-32 pb-8 relative z-10 px-6">
         <div className="max-w-7xl mx-auto text-center">
           <h1 className="text-6xl font-bold mb-6 text-white/90">
             Здесь хранятся ваши активы
           </h1>
-          <p className="text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed mb-8">
             Всего предметов: {(inventory?.fragments.total || 0) + (inventory?.cards.total || 0)}
           </p>
+          
+          {/* Tabs */}
+          <div className="flex items-center justify-center gap-4 mb-6">
+            <Button
+              onClick={() => setActiveTab('fragments')}
+              variant={activeTab === 'fragments' ? 'default' : 'outline'}
+              className={activeTab === 'fragments' ? 'bg-blue-600 hover:bg-blue-700' : ''}
+            >
+              Осколки ({inventory?.fragments.total || 0})
+            </Button>
+            <Button
+              onClick={() => setActiveTab('cards')}
+              variant={activeTab === 'cards' ? 'default' : 'outline'}
+              className={activeTab === 'cards' ? 'bg-purple-600 hover:bg-purple-700' : ''}
+            >
+              Ваши NFT ({inventory?.cards.total || 0})
+            </Button>
+          </div>
+
+          {/* Craft Button - только на вкладке осколков */}
+          {activeTab === 'fragments' && inventory?.fragments.total && inventory.fragments.total >= 3 && (
+            <Button
+              onClick={() => setShowCraftModal(true)}
+              className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600"
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
+              Создать NFT карту
+            </Button>
+          )}
         </div>
       </section>
 
       {/* Rarity Cards Grid or Empty State */}
       {hasAnyItems ? (
-        <section className="py-16 relative z-10 px-6">
-          <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-            {rarityTiers.map((tier) => (
-              <div
-                key={tier.rarity}
-                onClick={() => setSelectedRarity(tier.rarity)}
-                className="relative group cursor-pointer transition-all duration-500 hover:scale-105"
-                style={{
-                  background: `linear-gradient(135deg, rgba(${tier.glowColor}, 0.1) 0%, rgba(${tier.glowColor}, 0.05) 100%)`,
-                  border: `1px solid rgba(${tier.glowColor}, 0.3)`,
-                  boxShadow: `0 0 30px rgba(${tier.glowColor}, 0.2)`,
-                }}
-              >
-                {/* Card Inner */}
-                <div className="p-6 rounded-2xl backdrop-blur-sm">
-                  {/* Count Badge */}
-                  <div
-                    className="absolute -top-3 -right-3 w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg shadow-lg z-10"
-                    style={{
-                      background: tier.gradient,
-                      boxShadow: `0 0 20px rgba(${tier.glowColor}, 0.6)`,
-                    }}
-                  >
-                    {tier.count}
-                  </div>
-
-                  {/* Rarity Name */}
-                  <h3 className="text-2xl font-bold mb-2" style={{ color: tier.color }}>
-                    {tier.name}
-                  </h3>
-                  <p className="text-sm text-gray-400 mb-4">{tier.label}</p>
-
-                  {/* Placeholder Image */}
-                  <div className="w-full h-48 rounded-lg overflow-hidden mb-4 bg-white/5">
-                    {tier.image && (
-                      <img
-                        src={tier.image}
-                        alt={tier.name}
-                        className="w-full h-full object-cover"
+        <>
+          {/* Fragments Tab */}
+          {activeTab === 'fragments' && hasFragments && (
+            <section className="py-8 relative z-10 px-6">
+              <div className="max-w-7xl mx-auto">
+                <h2 className="text-2xl font-bold text-white mb-6 text-center">Ваши осколки</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {inventory?.fragments.items.map((shard: any) => (
+                    <div
+                      key={shard.id}
+                      className="relative p-4 rounded-lg border border-white/20 bg-white/5 hover:bg-white/10 transition"
+                    >
+                      <img 
+                        src={shard.imageUrl} 
+                        alt={shard.name}
+                        className="w-full h-32 object-contain mb-2"
                       />
-                    )}
-                  </div>
-
-                  {/* Stats */}
-                  <div className="text-sm space-y-1">
-                    <div className="flex justify-between text-gray-400">
-                      <span>Осколков:</span>
-                      <span className="text-white">{inventory?.fragments.byRarity[tier.rarity as keyof typeof inventory.fragments.byRarity] || 0}</span>
+                      <p className="text-sm font-medium text-white text-center">{shard.label}</p>
+                      <p className="text-xs text-gray-400 text-center">{shard.name}</p>
+                      <p className="text-xs text-gray-500 text-center mt-2">
+                        {new Date(shard.collectedAt).toLocaleDateString()}
+                      </p>
                     </div>
-                    <div className="flex justify-between text-gray-400">
-                      <span>Карт:</span>
-                      <span className="text-white">{inventory?.cards.byRarity[tier.rarity as keyof typeof inventory.cards.byRarity] || 0}</span>
-                    </div>
-                  </div>
+                  ))}
                 </div>
-
-                {/* Hover Glow Effect */}
-                <div
-                  className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-                  style={{
-                    boxShadow: `0 0 50px rgba(${tier.glowColor}, 0.4), inset 0 0 50px rgba(${tier.glowColor}, 0.1)`,
-                  }}
-                />
               </div>
-            ))}
-          </div>
-        </section>
+            </section>
+          )}
+
+          {/* Cards Tab */}
+          {activeTab === 'cards' && hasCards && (
+            <section className="py-8 relative z-10 px-6">
+              <div className="max-w-7xl mx-auto">
+                <h2 className="text-2xl font-bold text-white mb-6 text-center">Ваши NFT карты</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {inventory?.cards.items.map((card: any) => {
+                    const rarityStyle = rarityConfig[card.rarity] || rarityConfig.common
+                    return (
+                      <div
+                        key={card.id}
+                        className="relative group rounded-xl overflow-hidden border-2 transition-all duration-500 hover:scale-105"
+                        style={{
+                          borderColor: rarityStyle.color,
+                          boxShadow: `0 0 30px rgba(${rarityStyle.glowColor}, 0.3)`,
+                        }}
+                      >
+                        <div className="p-6 bg-gradient-to-b from-gray-900 to-black">
+                          {/* Badge редкости */}
+                          <div 
+                            className="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-bold"
+                            style={{ 
+                              background: rarityStyle.gradient,
+                              boxShadow: `0 0 20px rgba(${rarityStyle.glowColor}, 0.5)`
+                            }}
+                          >
+                            {rarityStyle.label}
+                          </div>
+
+                          {/* Изображение карты */}
+                          <div className="w-full h-64 rounded-lg overflow-hidden mb-4 bg-white/5">
+                            {card.imageUrl ? (
+                              <img
+                                src={card.imageUrl}
+                                alt={card.name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-gray-500">
+                                NFT Card
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Название */}
+                          <h3 className="text-xl font-bold mb-2 text-white">{card.name}</h3>
+                          
+                          {/* Описание */}
+                          <p className="text-sm text-gray-400 mb-4 line-clamp-2">{card.description}</p>
+                          
+                          {/* Дата создания */}
+                          <div className="text-xs text-gray-500">
+                            Создана: {new Date(card.craftedAt).toLocaleDateString('ru-RU', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Glow эффект при наведении */}
+                        <div
+                          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                          style={{
+                            boxShadow: `inset 0 0 50px rgba(${rarityStyle.glowColor}, 0.2)`,
+                          }}
+                        />
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Empty state для активной вкладки */}
+          {activeTab === 'fragments' && !hasFragments && (
+            <section className="py-32 relative z-10 px-6">
+              <div className="max-w-2xl mx-auto text-center">
+                <p className="text-xl text-gray-400 mb-8">У вас пока нет осколков</p>
+                <button
+                  onClick={() => router.push('/map')}
+                  className="px-8 py-4 bg-blue-600 hover:bg-blue-700 rounded-xl font-semibold text-lg transition"
+                >
+                  Собрать осколки
+                </button>
+              </div>
+            </section>
+          )}
+
+          {activeTab === 'cards' && !hasCards && (
+            <section className="py-32 relative z-10 px-6">
+              <div className="max-w-2xl mx-auto text-center">
+                <p className="text-xl text-gray-400 mb-8">У вас пока нет NFT карт</p>
+                <p className="text-gray-500 mb-8">Соберите 3 разных осколка (A + B + C) одной карты, чтобы создать NFT</p>
+                {hasFragments && (
+                  <button
+                    onClick={() => setActiveTab('fragments')}
+                    className="px-8 py-4 bg-purple-600 hover:bg-purple-700 rounded-xl font-semibold text-lg transition"
+                  >
+                    Посмотреть осколки
+                  </button>
+                )}
+              </div>
+            </section>
+          )}
+        </>
       ) : (
         <section className="py-32 relative z-10 px-6">
           <div className="max-w-2xl mx-auto text-center">
@@ -312,61 +439,6 @@ export default function InventoryPage() {
             </div>
           </div>
         </section>
-      )}
-
-      {/* Modal for Viewing Items */}
-      {selectedRarity && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
-          <div className="relative max-w-6xl w-full bg-gray-900/95 rounded-2xl p-8 max-h-[90vh] overflow-y-auto border border-white/10">
-            {/* Close Button */}
-            <button
-              onClick={() => setSelectedRarity(null)}
-              className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition"
-            >
-              <X className="w-6 h-6" />
-            </button>
-
-            {/* Modal Header */}
-            <h2 className="text-4xl font-bold mb-8" style={{ color: rarityConfig[selectedRarity].color }}>
-              {rarityConfig[selectedRarity].name} - {rarityConfig[selectedRarity].label}
-            </h2>
-
-            {/* Items Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {selectedItems.map((item: any) => (
-                <div
-                  key={item.id}
-                  className="bg-white/5 rounded-xl p-4 border border-white/10 hover:bg-white/10 transition"
-                >
-                  {item.imageUrl && (
-                    <div className="w-full h-48 rounded-lg overflow-hidden mb-4 bg-white/5">
-                      <img
-                        src={item.imageUrl}
-                        alt={item.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  )}
-                  <h3 className="text-xl font-bold mb-2 text-white">{item.name}</h3>
-                  <p className="text-sm text-gray-400 mb-4">{item.description}</p>
-                  <div className="text-xs text-gray-500">
-                    {item.collectedAt ? (
-                      <p>Собрано: {new Date(item.collectedAt).toLocaleDateString()}</p>
-                    ) : (
-                      <p>Создано: {new Date(item.mintedAt).toLocaleDateString()}</p>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {selectedItems.length === 0 && (
-              <div className="text-center text-gray-400 py-12">
-                <p>Нет предметов этой редкости</p>
-              </div>
-            )}
-          </div>
-        </div>
       )}
     </div>
   )

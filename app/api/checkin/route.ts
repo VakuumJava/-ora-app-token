@@ -120,6 +120,7 @@ export async function POST(request: NextRequest) {
       id: collectedId,
       userId,
       shardId: spawnPoint.shardId,
+      cardId: shard.cardId, // Сохраняем ID карты к которой относится осколок
       spawnPointId: spawnPoint.id,
       collectedAt: new Date()
     }
