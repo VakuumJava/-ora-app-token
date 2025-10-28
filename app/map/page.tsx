@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { MapPin, X, MapPinOff } from "lucide-react"
 import dynamic from "next/dynamic"
 import { useState, useEffect } from "react"
+import { CheckinModal } from "@/components/checkin-modal"
 
 const MapComponent = dynamic(() => import("@/components/map-component"), { 
   ssr: false,
@@ -18,8 +19,8 @@ const MapComponent = dynamic(() => import("@/components/map-component"), {
   )
 })
 
-type Fragment = "1" | "2" | "3"
-type Rarity = "Common" | "Rare" | "Epic" | "Legendary"
+type Fragment = "A" | "B" | "C"
+type Rarity = "common" | "uncommon" | "rare" | "epic" | "legendary"
 
 export interface FragmentSpawn {
   id: string
@@ -29,31 +30,31 @@ export interface FragmentSpawn {
   rarity: Rarity
   name: string
   available: boolean
+  radius?: number
+  shardId: string
+  imageUrl?: string
 }
 
-export const fragmentSpawns: FragmentSpawn[] = [
-  { id: "1", lat: 42.8746, lng: 74.5698, fragment: "1", rarity: "Common", name: "Ошская — площадь Ала-Тоо", available: true },
-  { id: "2", lat: 42.8796, lng: 74.6054, fragment: "2", rarity: "Rare", name: "ТРЦ Вефа Центр", available: true },
-  { id: "3", lat: 42.8653, lng: 74.5847, fragment: "3", rarity: "Epic", name: "Дубовый парк", available: false },
-  { id: "4", lat: 42.8432, lng: 74.5856, fragment: "1", rarity: "Legendary", name: "ТРЦ Асия Молл", available: true },
-  { id: "5", lat: 42.8587, lng: 74.6169, fragment: "2", rarity: "Rare", name: "Парк имени Панфилова", available: true },
-  { id: "6", lat: 42.8676, lng: 74.5874, fragment: "3", rarity: "Epic", name: "Технопарк", available: true },
-]
+export const fragmentSpawns: FragmentSpawn[] = []
 
 export const fragmentColors: Record<Fragment, string> = {
-  "1": "#3b82f6", 
-  "2": "#8b5cf6", 
-  "3": "#ec4899",
+  "A": "#3b82f6", 
+  "B": "#8b5cf6", 
+  "C": "#ec4899",
 }
 
 export const fragmentImages: Record<Fragment, string> = {
-  "1": "/elements/shard-1.png",
-  "2": "/elements/shard-2.png", 
-  "3": "/elements/shard-3.png",
+  "A": "/elements/shard-1.png",
+  "B": "/elements/shard-2.png", 
+  "C": "/elements/shard-3.png",
 }
 
 export const rarityColors: Record<Rarity, string> = {
-  Common: "#9ca3af", Rare: "#3b82f6", Epic: "#a855f7", Legendary: "#f59e0b",
+  common: "#9ca3af",
+  uncommon: "#22c55e",
+  rare: "#3b82f6",
+  epic: "#a855f7",
+  legendary: "#f59e0b",
 }
 
 export default function MapPage() {
@@ -61,6 +62,29 @@ export default function MapPage() {
   const [hasGeolocation, setHasGeolocation] = useState<boolean | null>(null)
   const [isCheckingLocation, setIsCheckingLocation] = useState(true)
   const [locationError, setLocationError] = useState<string>("")
+  const [spawnPoints, setSpawnPoints] = useState<FragmentSpawn[]>([])
+  const [isLoadingSpawns, setIsLoadingSpawns] = useState(true)
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(null)
+  const [showCheckinModal, setShowCheckinModal] = useState(false)
+
+  // Загружаем точки спавна из API
+  useEffect(() => {
+    async function loadSpawnPoints() {
+      try {
+        const response = await fetch('/api/spawn-points')
+        if (response.ok) {
+          const data = await response.json()
+          setSpawnPoints(data)
+        }
+      } catch (error) {
+        console.error('Error loading spawn points:', error)
+      } finally {
+        setIsLoadingSpawns(false)
+      }
+    }
+    
+    loadSpawnPoints()
+  }, [])
 
   useEffect(() => {
     // Проверяем доступность геолокации при загрузке страницы
@@ -75,6 +99,7 @@ export default function MapPage() {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         console.log("Геолокация получена:", position.coords)
+        setUserLocation([position.coords.latitude, position.coords.longitude])
         setHasGeolocation(true)
         setIsCheckingLocation(false)
         setLocationError("")
@@ -114,6 +139,7 @@ export default function MapPage() {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         console.log("Геолокация получена:", position.coords)
+        setUserLocation([position.coords.latitude, position.coords.longitude])
         setHasGeolocation(true)
         setIsCheckingLocation(false)
         setLocationError("")
@@ -278,9 +304,32 @@ export default function MapPage() {
         <MapComponent 
           selectedFragment={selectedFragment}
           setSelectedFragment={setSelectedFragment}
+          spawnPoints={spawnPoints}
+          isLoadingSpawns={isLoadingSpawns}
+          userLocation={userLocation}
         />
         
-        {selectedFragment && (
+        {selectedFragment && showCheckinModal && (
+          <CheckinModal
+            fragment={selectedFragment}
+            userLocation={userLocation}
+            onClose={() => {
+              setSelectedFragment(null)
+              setShowCheckinModal(false)
+            }}
+            onSuccess={() => {
+              setShowCheckinModal(false)
+              setSelectedFragment(null)
+              // Перезагружаем точки спавна
+              fetch('/api/spawn-points')
+                .then(res => res.json())
+                .then(data => setSpawnPoints(data))
+                .catch(console.error)
+            }}
+          />
+        )}
+        
+        {selectedFragment && !showCheckinModal && (
           <div className="absolute bottom-3 sm:bottom-6 left-2 right-2 sm:left-1/2 sm:-translate-x-1/2 w-auto sm:w-full sm:max-w-md rounded-2xl border border-white/10 bg-black/95 backdrop-blur-2xl p-4 sm:p-6 z-[1000] animate-slide-up shadow-2xl mx-auto">
             <button 
               onClick={() => setSelectedFragment(null)}
@@ -319,7 +368,11 @@ export default function MapPage() {
             </div>
             
             {selectedFragment.available && (
-              <Button className="w-full mt-4 bg-blue-600 hover:bg-blue-700 transition-smooth hover:scale-[1.02] animate-fade-in text-sm sm:text-base h-10 sm:h-11 touch-manipulation" style={{ animationDelay: '0.2s' }}>
+              <Button 
+                onClick={() => setShowCheckinModal(true)}
+                className="w-full mt-4 bg-blue-600 hover:bg-blue-700 transition-smooth hover:scale-[1.02] animate-fade-in text-sm sm:text-base h-10 sm:h-11 touch-manipulation" 
+                style={{ animationDelay: '0.2s' }}
+              >
                 Начать чекин
               </Button>
             )}

@@ -1,7 +1,7 @@
 "use client"
 
-import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from "react-leaflet"
-import { fragmentSpawns, fragmentColors, fragmentImages, type FragmentSpawn } from "@/app/map/page"
+import { MapContainer, TileLayer, Marker, Popup, Circle } from "react-leaflet"
+import { fragmentColors, fragmentImages, type FragmentSpawn } from "@/app/map/page"
 import L from "leaflet"
 import "leaflet/dist/leaflet.css"
 import { useEffect, useState } from "react"
@@ -91,16 +91,26 @@ const createFragmentIcon = (fragment: string) => {
 interface MapComponentProps {
   selectedFragment: FragmentSpawn | null
   setSelectedFragment: (fragment: FragmentSpawn | null) => void
+  spawnPoints: FragmentSpawn[]
+  isLoadingSpawns: boolean
+  userLocation: [number, number] | null
 }
 
-export default function MapComponent({ setSelectedFragment }: MapComponentProps) {
-  const [userLocation, setUserLocation] = useState<[number, number] | null>(null)
+export default function MapComponent({ setSelectedFragment, spawnPoints, isLoadingSpawns, userLocation: propUserLocation }: MapComponentProps) {
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(propUserLocation)
   const [isMobile, setIsMobile] = useState(false)
   
   useEffect(() => {
     // Определяем мобильное устройство
     setIsMobile(window.innerWidth < 768)
   }, [])
+  
+  // Синхронизируем с prop
+  useEffect(() => {
+    if (propUserLocation) {
+      setUserLocation(propUserLocation)
+    }
+  }, [propUserLocation])
   
   useEffect(() => {
     // Получаем геолокацию пользователя с улучшенными параметрами
@@ -201,7 +211,7 @@ export default function MapComponent({ setSelectedFragment }: MapComponentProps)
         />
         
         {/* Маркеры осколков */}
-        {fragmentSpawns.map((spawn) => (
+        {spawnPoints.map((spawn: FragmentSpawn) => (
           <Marker
             key={spawn.id}
             position={[spawn.lat, spawn.lng]}
