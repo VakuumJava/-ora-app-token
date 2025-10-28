@@ -65,6 +65,9 @@ export interface CollectedCard {
   usedShardIds: string[] // ID осколков которые были использованы
   model: string // Рандомная модель
   background: string // Рандомный фон
+  mintedOn?: 'ton' | 'ethereum' // На какой сети заминчено
+  txHash?: string // Хеш транзакции минта
+  tokenId?: string // ID токена в блокчейне
 }
 
 export const userCards: CollectedCard[] = []
