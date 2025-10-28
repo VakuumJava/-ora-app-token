@@ -103,21 +103,37 @@ export default function MapComponent({ setSelectedFragment }: MapComponentProps)
   }, [])
   
   useEffect(() => {
-    // Получаем геолокацию пользователя
+    // Получаем геолокацию пользователя с улучшенными параметрами
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
+      const watchId = navigator.geolocation.watchPosition(
         (position) => {
+          console.log("Позиция обновлена:", position.coords.latitude, position.coords.longitude)
           setUserLocation([position.coords.latitude, position.coords.longitude])
         },
         (error) => {
           console.log("Геолокация недоступна:", error)
+          // Пробуем получить хотя бы одноразово
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              setUserLocation([position.coords.latitude, position.coords.longitude])
+            },
+            (err) => console.log("Не удалось получить геолокацию:", err),
+            { 
+              enableHighAccuracy: false,
+              timeout: 15000,
+              maximumAge: 30000
+            }
+          )
         },
         { 
-          enableHighAccuracy: false, // Быстрее на мобильных
-          timeout: 5000,
-          maximumAge: 10000
+          enableHighAccuracy: true, // Более точное определение
+          timeout: 15000,
+          maximumAge: 30000
         }
       )
+
+      // Очищаем watchPosition при размонтировании
+      return () => navigator.geolocation.clearWatch(watchId)
     }
   }, [])
 

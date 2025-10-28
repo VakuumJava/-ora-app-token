@@ -60,50 +60,87 @@ export default function MapPage() {
   const [selectedFragment, setSelectedFragment] = useState<FragmentSpawn | null>(null)
   const [hasGeolocation, setHasGeolocation] = useState<boolean | null>(null)
   const [isCheckingLocation, setIsCheckingLocation] = useState(true)
+  const [locationError, setLocationError] = useState<string>("")
 
   useEffect(() => {
     // Проверяем доступность геолокации при загрузке страницы
     if (!navigator.geolocation) {
       setHasGeolocation(false)
       setIsCheckingLocation(false)
+      setLocationError("Ваш браузер не поддерживает геолокацию")
       return
     }
 
+    // Запрашиваем геолокацию с увеличенным таймаутом
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        console.log("Геолокация получена:", position.coords)
         setHasGeolocation(true)
         setIsCheckingLocation(false)
+        setLocationError("")
       },
       (error) => {
         console.error("Ошибка получения геолокации:", error)
         setHasGeolocation(false)
         setIsCheckingLocation(false)
+        
+        // Детальное сообщение об ошибке
+        switch(error.code) {
+          case error.PERMISSION_DENIED:
+            setLocationError("Вы отклонили запрос на доступ к геолокации")
+            break
+          case error.POSITION_UNAVAILABLE:
+            setLocationError("Информация о местоположении недоступна")
+            break
+          case error.TIMEOUT:
+            setLocationError("Превышено время ожидания запроса геолокации")
+            break
+          default:
+            setLocationError("Произошла неизвестная ошибка при получении геолокации")
+        }
       },
       { 
         enableHighAccuracy: false,
-        timeout: 10000,
-        maximumAge: 0
+        timeout: 15000, // Увеличен таймаут до 15 секунд
+        maximumAge: 30000 // Разрешаем использовать кешированное значение
       }
     )
   }, [])
 
   const requestGeolocation = () => {
     setIsCheckingLocation(true)
+    setLocationError("")
+    
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        console.log("Геолокация получена:", position.coords)
         setHasGeolocation(true)
         setIsCheckingLocation(false)
+        setLocationError("")
       },
       (error) => {
         console.error("Ошибка получения геолокации:", error)
-        setHasGeolocation(false)
         setIsCheckingLocation(false)
-        alert("Не удалось получить доступ к геолокации. Пожалуйста, разрешите доступ в настройках браузера.")
+        
+        // Детальное сообщение об ошибке
+        switch(error.code) {
+          case error.PERMISSION_DENIED:
+            setLocationError("Вы отклонили запрос на доступ к геолокации. Разрешите доступ в настройках браузера.")
+            break
+          case error.POSITION_UNAVAILABLE:
+            setLocationError("Не удалось определить ваше местоположение. Проверьте настройки GPS.")
+            break
+          case error.TIMEOUT:
+            setLocationError("Превышено время ожидания. Попробуйте еще раз.")
+            break
+          default:
+            setLocationError("Произошла ошибка при получении геолокации. Попробуйте еще раз.")
+        }
       },
       { 
         enableHighAccuracy: false,
-        timeout: 10000,
-        maximumAge: 0
+        timeout: 15000,
+        maximumAge: 30000
       }
     )
   }
@@ -129,24 +166,47 @@ export default function MapPage() {
     return (
       <div className="flex h-screen flex-col bg-black">
         <SiteHeader />
-        <div className="flex-1 flex items-center justify-center">
+        <div className="flex-1 flex items-center justify-center p-4">
           <div className="text-center text-white px-6 max-w-md">
-            <MapPinOff className="h-20 w-20 text-red-500 mx-auto mb-6" />
+            <MapPinOff className="h-20 w-20 text-red-500 mx-auto mb-6 animate-pulse" />
             <h2 className="text-2xl font-bold mb-4">Требуется геолокация</h2>
-            <p className="text-gray-400 mb-6">
+            <p className="text-gray-400 mb-4">
               Для использования карты необходимо разрешить доступ к вашей геолокации. 
               Это нужно для отображения осколков поблизости и возможности их сбора.
             </p>
+            
+            {locationError && (
+              <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+                <p className="text-sm text-red-400">{locationError}</p>
+              </div>
+            )}
+            
             <Button 
               onClick={requestGeolocation}
-              className="w-full bg-blue-600 hover:bg-blue-700 transition-all"
+              disabled={isCheckingLocation}
+              className="w-full bg-blue-600 hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <MapPin className="h-5 w-5 mr-2" />
-              Разрешить доступ к геолокации
+              {isCheckingLocation ? (
+                <>
+                  <div className="h-5 w-5 mr-2 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  Ожидание...
+                </>
+              ) : (
+                <>
+                  <MapPin className="h-5 w-5 mr-2" />
+                  Разрешить доступ к геолокации
+                </>
+              )}
             </Button>
-            <p className="text-xs text-gray-500 mt-4">
-              Если кнопка не работает, разрешите геолокацию в настройках браузера
-            </p>
+            
+            <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg text-left">
+              <p className="text-xs text-blue-300 font-semibold mb-2">💡 Как разрешить геолокацию:</p>
+              <ul className="text-xs text-gray-400 space-y-1">
+                <li>• Safari: Настройки → Safari → Геолокация</li>
+                <li>• Chrome: Настройки → Конфиденциальность → Геоданные</li>
+                <li>• Firefox: Настройки → Приватность → Разрешения</li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
