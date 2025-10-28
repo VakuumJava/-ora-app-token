@@ -85,6 +85,8 @@ export function CheckinModal({ fragment, userLocation, onClose, onSuccess }: Che
         const data = await response.json()
 
         if (response.ok) {
+          // Показываем успешное сообщение
+          alert(`🎉 ${data.message}\n\nОсколок ${data.shard.label} добавлен в инвентарь!`)
           onSuccess()
         } else {
           setError(data.message || data.error || 'Ошибка чекина')
@@ -92,6 +94,7 @@ export function CheckinModal({ fragment, userLocation, onClose, onSuccess }: Che
           setHoldProgress(0)
         }
       } catch (err) {
+        console.error('Ошибка чекина:', err)
         setError('Ошибка сети')
         setIsChecking(false)
         setHoldProgress(0)

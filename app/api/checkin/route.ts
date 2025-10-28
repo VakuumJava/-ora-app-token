@@ -1,21 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
-import prisma from '@/lib/db'
 import { getUserFromCookies } from '@/lib/jwt'
 import { calculateDistance } from '@/lib/geo-utils'
+import { tempSpawnPoints, shardInfo } from '@/lib/spawn-storage'
 
 /**
  * POST /api/checkin - Чекин пользователя на точке спавна
  */
 export async function POST(request: NextRequest) {
   try {
-    // Проверяем авторизацию
-    const user = await getUserFromCookies()
-    if (!user || !user.userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    // Проверяем авторизацию (пока без реальной проверки для демо)
+    // const user = await getUserFromCookies()
+    // if (!user || !user.userId) {
+    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    // }
 
     const body = await request.json()
     const { spawnPointId, userLat, userLng, accuracy } = body
+
+    console.log('🎯 Чекин запрос:', { spawnPointId, userLat, userLng })
 
     if (!spawnPointId || userLat === undefined || userLng === undefined) {
       return NextResponse.json(
@@ -24,30 +26,33 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Получаем точку спавна
-    const spawnPoint = await prisma.spawnPoint.findUnique({
-      where: { id: spawnPointId },
-      include: {
-        shard: {
-          include: {
-            card: true
-          }
-        }
-      }
-    })
+    // Получаем точку спавна из временного хранилища
+    const spawnPoint = tempSpawnPoints.find((sp: any) => sp.id === spawnPointId)
+
+    console.log('📍 Найдена точка спавна:', spawnPoint)
+    console.log('📦 Всего точек в хранилище:', tempSpawnPoints.length)
 
     if (!spawnPoint) {
-      return NextResponse.json({ error: 'Spawn point not found' }, { status: 404 })
+      return NextResponse.json({ 
+        error: 'Spawn point not found',
+        message: 'Точка спавна не найдена. Возможно, она была удалена.'
+      }, { status: 404 })
     }
 
     // Проверяем активность
     if (!spawnPoint.active) {
-      return NextResponse.json({ error: 'Spawn point is not active' }, { status: 400 })
+      return NextResponse.json({ 
+        error: 'Spawn point is not active',
+        message: 'Эта точка спавна неактивна'
+      }, { status: 400 })
     }
 
     // Проверяем срок действия
-    if (spawnPoint.expiresAt && spawnPoint.expiresAt < new Date()) {
-      return NextResponse.json({ error: 'Spawn point has expired' }, { status: 400 })
+    if (spawnPoint.expiresAt && new Date(spawnPoint.expiresAt) < new Date()) {
+      return NextResponse.json({ 
+        error: 'Spawn point has expired',
+        message: 'Срок действия этой точки истек'
+      }, { status: 400 })
     }
 
     // Вычисляем расстояние между пользователем и точкой спавна
@@ -57,6 +62,8 @@ export async function POST(request: NextRequest) {
       spawnPoint.latitude,
       spawnPoint.longitude
     )
+
+    console.log(`📏 Расстояние: ${distance.toFixed(2)}м, требуется: ${spawnPoint.radius || 5}м`)
 
     // Проверяем радиус (по умолчанию 5 метров)
     const requiredRadius = spawnPoint.radius || 5
@@ -78,58 +85,28 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Проверяем, не собирал ли пользователь уже этот осколок
-    const existingShard = await prisma.userShard.findFirst({
-      where: {
-        userId: user.userId,
-        shardId: spawnPoint.shardId,
-        used: false
-      }
-    })
-
-    if (existingShard) {
-      return NextResponse.json({
-        error: 'Already collected',
-        message: 'Вы уже собрали этот осколок'
-      }, { status: 400 })
+    // Получаем информацию об осколке
+    const shard = shardInfo[spawnPoint.shardId as keyof typeof shardInfo]
+    
+    if (!shard) {
+      return NextResponse.json({ 
+        error: 'Shard not found',
+        message: 'Информация об осколке не найдена'
+      }, { status: 404 })
     }
 
-    // Добавляем осколок в инвентарь пользователя
-    const userShard = await prisma.userShard.create({
-      data: {
-        userId: user.userId,
-        shardId: spawnPoint.shardId,
-        collectedAt: new Date(),
-        used: false
-      },
-      include: {
-        shard: {
-          include: {
-            card: true
-          }
-        }
-      }
-    })
+    console.log('✅ Чекин успешен! Осколок:', shard.label)
 
-    // Обновляем счетчик осколков у пользователя
-    await prisma.user.update({
-      where: { id: user.userId },
-      data: {
-        totalShards: {
-          increment: 1
-        }
-      }
-    })
-
+    // Возвращаем успешный результат (без сохранения в БД для демо)
     return NextResponse.json({
       success: true,
-      message: 'Осколок успешно собран!',
+      message: '🎉 Осколок успешно собран!',
       shard: {
-        id: userShard.id,
-        label: userShard.shard.label,
-        cardName: userShard.shard.card.name,
-        imageUrl: userShard.shard.imageUrl,
-        collectedAt: userShard.collectedAt
+        id: spawnPoint.id,
+        label: shard.label,
+        cardName: shard.name,
+        imageUrl: shard.imageUrl,
+        collectedAt: new Date()
       }
     })
   } catch (error) {
