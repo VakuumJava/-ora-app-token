@@ -45,7 +45,10 @@ export async function GET() {
         imageUrl: card?.imageUrl || "",
         rarity: card?.rarity || "common",
         craftedAt: item.craftedAt,
-        usedShardIds: item.usedShardIds
+        usedShardIds: item.usedShardIds,
+        model: item.model,
+        background: item.background,
+        owner: userId // Добавляем владельца
       }
     })
     

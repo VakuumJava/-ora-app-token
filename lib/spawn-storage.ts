@@ -14,9 +14,10 @@ export const cardInfo = {
     id: "card-1",
     name: "Легендарная карта Qora",
     description: "Мощная NFT карта из осколков древности",
-    imageUrl: "/cards/qora-card.png", // Нужно будет добавить изображение
+    imageUrl: "/craftedstone.png", // Реальное изображение карты
     rarity: "legendary" as const,
-    requiredShards: ["shard-1", "shard-2", "shard-3"] // Требуется A+B+C
+    requiredShards: ["shard-1", "shard-2", "shard-3"], // Требуется A+B+C
+    maxSupply: 2000 // Максимальное количество выпуска
   }
 }
 
@@ -62,6 +63,29 @@ export interface CollectedCard {
   cardId: string // ID карты (card-1, card-2, etc)
   craftedAt: Date
   usedShardIds: string[] // ID осколков которые были использованы
+  model: string // Рандомная модель
+  background: string // Рандомный фон
 }
 
 export const userCards: CollectedCard[] = []
+
+// Система пользователей (для демо)
+export interface UserProfile {
+  id: string
+  username: string
+  tonWallet?: string
+  ethWallet?: string
+  createdAt: Date
+}
+
+export const userProfiles: UserProfile[] = [
+  {
+    id: "demo-user",
+    username: "demo_user",
+    createdAt: new Date()
+  }
+]
+
+// Рандомные модели и фоны для карт
+export const cardModels = ["Hellfire", "Frostbite", "Shadow", "Celestial", "Inferno"]
+export const cardBackgrounds = ["Neon Blue", "Dark Purple", "Golden Sunset", "Mystic Green", "Blood Red"]

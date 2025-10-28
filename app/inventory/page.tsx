@@ -6,6 +6,7 @@ import { SiteHeader } from "@/components/site-header"
 import { CosmicBackground } from "@/components/cosmic-background"
 import { ParticlesBackground } from "@/components/particles-background"
 import { CraftModal } from "@/components/craft-modal"
+import { CardDetailsModal } from "@/components/card-details-modal"
 import { X, Loader2, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -107,6 +108,7 @@ export default function InventoryPage() {
   const [error, setError] = useState<string | null>(null)
   const [showCraftModal, setShowCraftModal] = useState(false)
   const [activeTab, setActiveTab] = useState<'fragments' | 'cards'>('fragments')
+  const [selectedCard, setSelectedCard] = useState<any | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -209,6 +211,45 @@ export default function InventoryPage() {
       .catch(console.error)
   }
 
+  // Обработчик передачи карты
+  const handleTransfer = async (username: string) => {
+    if (!selectedCard) return
+
+    const response = await fetch('/api/transfer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        cardId: selectedCard.id,
+        recipientUsername: username
+      })
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Ошибка при передаче')
+    }
+
+    alert(data.message)
+    
+    // Перезагружаем инвентарь
+    handleCraftSuccess()
+  }
+
+  // Обработчик минта NFT
+  const handleMint = async (chain: 'ton' | 'eth') => {
+    // Проверяем наличие подключенного кошелька
+    if (chain === 'ton') {
+      // TODO: Проверить подключение TonConnect
+      alert('Функция минта на TON будет доступна после подключения кошелька')
+      throw new Error('TON wallet not connected')
+    } else {
+      // TODO: Проверить подключение Web3/MetaMask
+      alert('Функция минта на Ethereum будет доступна после подключения кошелька')
+      throw new Error('ETH wallet not connected')
+    }
+  }
+
   return (
     <div className="min-h-screen bg-black text-white relative overflow-hidden">
       <CosmicBackground />
@@ -222,6 +263,19 @@ export default function InventoryPage() {
           shards={inventory.fragments.items as any}
           onClose={() => setShowCraftModal(false)}
           onSuccess={handleCraftSuccess}
+        />
+      )}
+
+      {/* Card Details Modal */}
+      {selectedCard && (
+        <CardDetailsModal
+          card={selectedCard}
+          totalMinted={inventory?.cards.total || 0}
+          maxSupply={2000}
+          floorPrice={null}
+          onClose={() => setSelectedCard(null)}
+          onTransfer={handleTransfer}
+          onMint={handleMint}
         />
       )}
 
@@ -306,9 +360,10 @@ export default function InventoryPage() {
                   {inventory?.cards.items.map((card: any) => {
                     const rarityStyle = rarityConfig[card.rarity] || rarityConfig.common
                     return (
-                      <div
+                      <button
                         key={card.id}
-                        className="relative group rounded-xl overflow-hidden border-2 transition-all duration-500 hover:scale-105"
+                        onClick={() => setSelectedCard(card)}
+                        className="relative group rounded-xl overflow-hidden border-2 transition-all duration-500 hover:scale-105 cursor-pointer text-left"
                         style={{
                           borderColor: rarityStyle.color,
                           boxShadow: `0 0 30px rgba(${rarityStyle.glowColor}, 0.3)`,
@@ -366,7 +421,7 @@ export default function InventoryPage() {
                             boxShadow: `inset 0 0 50px rgba(${rarityStyle.glowColor}, 0.2)`,
                           }}
                         />
-                      </div>
+                      </button>
                     )
                   })}
                 </div>
