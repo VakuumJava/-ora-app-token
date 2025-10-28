@@ -1,27 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import prisma from '@/lib/db'
-import { getUserFromCookies } from '@/lib/jwt'
+import { tempSpawnPoints, shardMapping } from '@/lib/spawn-storage'
 
 /**
  * POST /api/admin/spawn-points/create - Создание точки спавна админом
  */
 export async function POST(request: NextRequest) {
   try {
-    // Проверяем авторизацию
-    const user = await getUserFromCookies()
-    if (!user || !user.userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    // Проверяем админ права
-    const adminRole = await prisma.adminRole.findUnique({
-      where: { userId: user.userId }
-    })
-
-    if (!adminRole) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
-
     const body = await request.json()
     const { shardId, latitude, longitude, radius, expiresAt } = body
 
@@ -32,51 +16,24 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Проверяем существование осколка
-    const shard = await prisma.shard.findUnique({
-      where: { id: shardId },
-      include: { card: true }
-    })
-
-    if (!shard) {
-      return NextResponse.json({ error: 'Shard not found' }, { status: 404 })
+    // Создаем ID для точки спавна
+    const id = `spawn-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    
+    const spawnPoint = {
+      id,
+      shardId,
+      latitude,
+      longitude,
+      radius: radius || 5,
+      active: true,
+      expiresAt: expiresAt ? new Date(expiresAt) : null,
+      createdAt: new Date()
     }
 
-    // Создаем точку спавна
-    const spawnPoint = await prisma.spawnPoint.create({
-      data: {
-        shardId,
-        latitude,
-        longitude,
-        radius: radius || 5,
-        active: true,
-        expiresAt: expiresAt ? new Date(expiresAt) : null
-      },
-      include: {
-        shard: {
-          include: {
-            card: true
-          }
-        }
-      }
-    })
+    tempSpawnPoints.push(spawnPoint)
 
-    // Логируем действие админа
-    await prisma.auditLog.create({
-      data: {
-        adminId: user.userId,
-        action: 'create_spawn_point',
-        entity: 'spawn_points',
-        entityId: spawnPoint.id,
-        after: JSON.stringify({
-          id: spawnPoint.id,
-          shardId,
-          latitude,
-          longitude,
-          radius: spawnPoint.radius
-        })
-      }
-    })
+    console.log('✅ Точка спавна создана:', spawnPoint)
+    console.log('📍 Всего точек:', tempSpawnPoints.length)
 
     return NextResponse.json({
       success: true,
@@ -84,12 +41,11 @@ export async function POST(request: NextRequest) {
         id: spawnPoint.id,
         lat: spawnPoint.latitude,
         lng: spawnPoint.longitude,
-        fragment: spawnPoint.shard.label,
-        rarity: spawnPoint.shard.card.rarity,
-        name: spawnPoint.shard.card.name,
+        fragment: shardMapping[shardId] || "A",
         radius: spawnPoint.radius,
         active: spawnPoint.active,
-        expiresAt: spawnPoint.expiresAt
+        expiresAt: spawnPoint.expiresAt,
+        shardId: spawnPoint.shardId
       }
     })
   } catch (error) {

@@ -1,44 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
-import prisma from '@/lib/db'
+import { tempSpawnPoints, shardMapping, shardInfo } from '@/lib/spawn-storage'
 
 /**
  * GET /api/spawn-points - Получение активных точек спавна
  */
 export async function GET(request: NextRequest) {
   try {
-    const spawnPoints = await prisma.spawnPoint.findMany({
-      where: {
-        active: true,
-        OR: [
-          { expiresAt: null },
-          { expiresAt: { gt: new Date() } }
-        ]
-      },
-      include: {
-        shard: {
-          include: {
-            card: true
-          }
+    // Форматируем точки спавна для фронтенда
+    const formattedSpawnPoints = tempSpawnPoints
+      .filter(sp => sp.active && (!sp.expiresAt || new Date(sp.expiresAt) > new Date()))
+      .map(sp => {
+        const shard = shardInfo[sp.shardId as keyof typeof shardInfo]
+        return {
+          id: sp.id,
+          lat: sp.latitude,
+          lng: sp.longitude,
+          fragment: shard?.label || "A",
+          rarity: "rare",
+          name: shard?.name || "Осколок",
+          available: true,
+          radius: sp.radius,
+          shardId: sp.shardId,
+          imageUrl: shard?.imageUrl || "/elements/shard-1.png"
         }
-      },
-      orderBy: {
-        createdAt: 'desc'
-      }
-    })
-
-    // Преобразуем в формат для фронтенда
-    const formattedSpawnPoints = spawnPoints.map(sp => ({
-      id: sp.id,
-      lat: sp.latitude,
-      lng: sp.longitude,
-      fragment: sp.shard.label, // A, B, C
-      rarity: sp.shard.card.rarity,
-      name: sp.shard.card.name,
-      available: true,
-      radius: sp.radius,
-      shardId: sp.shardId,
-      imageUrl: sp.shard.imageUrl
-    }))
+      })
 
     return NextResponse.json(formattedSpawnPoints)
   } catch (error) {
