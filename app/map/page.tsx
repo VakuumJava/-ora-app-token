@@ -18,9 +18,8 @@ const MapComponent = dynamic(() => import("@/components/map-component"), {
   )
 })
 
-type Fragment = "A" | "B" | "C" | "D" | "E"
+type Fragment = "1" | "2" | "3"
 type Rarity = "Common" | "Rare" | "Epic" | "Legendary"
-type Chain = "TON" | "ETH" | "BASE"
 
 export interface FragmentSpawn {
   id: string
@@ -28,22 +27,29 @@ export interface FragmentSpawn {
   lng: number
   fragment: Fragment
   rarity: Rarity
-  chain: Chain
   name: string
   available: boolean
 }
 
 export const fragmentSpawns: FragmentSpawn[] = [
-  { id: "1", lat: 42.8746, lng: 74.5698, fragment: "A", rarity: "Common", chain: "TON", name: "Ошская — площадь Ала-Тоо", available: true },
-  { id: "2", lat: 42.8796, lng: 74.6054, fragment: "B", rarity: "Rare", chain: "ETH", name: "ТРЦ Вефа Центр", available: true },
-  { id: "3", lat: 42.8653, lng: 74.5847, fragment: "C", rarity: "Epic", chain: "BASE", name: "Дубовый парк", available: false },
-  { id: "4", lat: 42.8432, lng: 74.5856, fragment: "D", rarity: "Legendary", chain: "TON", name: "ТРЦ Асия Молл", available: true },
-  { id: "5", lat: 42.8587, lng: 74.6169, fragment: "E", rarity: "Rare", chain: "ETH", name: "Парк имени Панфилова", available: true },
-  { id: "6", lat: 42.8676, lng: 74.5874, fragment: "A", rarity: "Epic", chain: "BASE", name: "Технопарк", available: true },
+  { id: "1", lat: 42.8746, lng: 74.5698, fragment: "1", rarity: "Common", name: "Ошская — площадь Ала-Тоо", available: true },
+  { id: "2", lat: 42.8796, lng: 74.6054, fragment: "2", rarity: "Rare", name: "ТРЦ Вефа Центр", available: true },
+  { id: "3", lat: 42.8653, lng: 74.5847, fragment: "3", rarity: "Epic", name: "Дубовый парк", available: false },
+  { id: "4", lat: 42.8432, lng: 74.5856, fragment: "1", rarity: "Legendary", name: "ТРЦ Асия Молл", available: true },
+  { id: "5", lat: 42.8587, lng: 74.6169, fragment: "2", rarity: "Rare", name: "Парк имени Панфилова", available: true },
+  { id: "6", lat: 42.8676, lng: 74.5874, fragment: "3", rarity: "Epic", name: "Технопарк", available: true },
 ]
 
 export const fragmentColors: Record<Fragment, string> = {
-  A: "#3b82f6", B: "#8b5cf6", C: "#ec4899", D: "#f59e0b", E: "#10b981",
+  "1": "#3b82f6", 
+  "2": "#8b5cf6", 
+  "3": "#ec4899",
+}
+
+export const fragmentImages: Record<Fragment, string> = {
+  "1": "/elements/shard-1.png",
+  "2": "/elements/shard-2.png", 
+  "3": "/elements/shard-3.png",
 }
 
 export const rarityColors: Record<Rarity, string> = {
@@ -52,7 +58,6 @@ export const rarityColors: Record<Rarity, string> = {
 
 export default function MapPage() {
   const [selectedFragment, setSelectedFragment] = useState<FragmentSpawn | null>(null)
-  const [selectedChain, setSelectedChain] = useState<Chain | null>(null)
 
   return (
     <div className="flex h-screen flex-col bg-black">
@@ -111,34 +116,12 @@ export default function MapPage() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-3 border-b border-white/10 bg-black/80 px-3 sm:px-6 py-2 sm:py-3 backdrop-blur-xl z-[1000] animate-slide-down">
         <h1 className="text-base sm:text-xl font-semibold text-white flex items-center gap-2">
           <MapPin className="h-4 w-4 sm:h-5 sm:w-5" />
-          Карта фрагментов
+          Карта осколков
         </h1>
-        <div className="flex gap-1 sm:gap-2 flex-wrap">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => setSelectedChain(null)}
-            className={`transition-smooth text-xs sm:text-sm h-8 px-2 sm:px-3 ${selectedChain === null ? "bg-blue-500/20 text-blue-300" : ""}`}
-          >
-            Все
-          </Button>
-          {(["TON", "ETH", "BASE"] as Chain[]).map((chain) => (
-            <Button 
-              key={chain}
-              variant="outline" 
-              size="sm" 
-              onClick={() => setSelectedChain(chain)}
-              className={`transition-smooth text-xs sm:text-sm h-8 px-2 sm:px-3 ${selectedChain === chain ? "bg-blue-500/20 text-blue-300" : ""}`}
-            >
-              {chain}
-            </Button>
-          ))}
-        </div>
       </div>
       
       <div className="relative flex-1">
         <MapComponent 
-          selectedChain={selectedChain}
           selectedFragment={selectedFragment}
           setSelectedFragment={setSelectedFragment}
         />
@@ -152,15 +135,14 @@ export default function MapPage() {
               <X className="h-5 w-5 sm:h-4 sm:w-4" />
             </button>
             
-            <div className="text-xs text-gray-400 mb-1 animate-fade-in">{selectedFragment.chain}</div>
-            <h3 className="text-lg sm:text-xl font-bold text-white mb-3 pr-8 animate-fade-in" style={{ animationDelay: '0.05s' }}>{selectedFragment.name}</h3>
+            <h3 className="text-lg sm:text-xl font-bold text-white mb-3 pr-8 animate-fade-in">{selectedFragment.name}</h3>
             
             <div className="flex gap-2 mb-4 animate-fade-in flex-wrap" style={{ animationDelay: '0.1s' }}>
               <span 
                 className="rounded-full px-2.5 sm:px-3 py-1 text-xs font-semibold text-white transition-smooth hover:scale-105"
                 style={{ background: fragmentColors[selectedFragment.fragment] }}
               >
-                Фрагмент {selectedFragment.fragment}
+                Осколок {selectedFragment.fragment}
               </span>
               <span 
                 className="rounded-full px-2.5 sm:px-3 py-1 text-xs font-semibold text-white transition-smooth hover:scale-105"

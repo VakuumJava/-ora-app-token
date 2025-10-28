@@ -182,7 +182,7 @@
   animation: float 6s ease-in-out infinite;
 }
 
-/* Pulse animation for star particles */
+
 @keyframes pulse {
   0%, 100% {
     opacity: 0.4;
