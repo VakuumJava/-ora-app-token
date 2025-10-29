@@ -1,29 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { tempSpawnPoints, shardMapping, shardInfo } from '@/lib/spawn-storage'
+import { getActiveSpawnPoints } from '@/lib/db-storage'
 
 /**
  * GET /api/spawn-points - Получение активных точек спавна
  */
 export async function GET(request: NextRequest) {
   try {
-    // Форматируем точки спавна для фронтенда
-    const formattedSpawnPoints = tempSpawnPoints
-      .filter(sp => sp.active && (!sp.expiresAt || new Date(sp.expiresAt) > new Date()))
-      .map(sp => {
-        const shard = shardInfo[sp.shardId as keyof typeof shardInfo]
-        return {
-          id: sp.id,
-          lat: sp.latitude,
-          lng: sp.longitude,
-          fragment: shard?.label || "A",
-          rarity: "rare",
-          name: shard?.name || "Осколок",
-          available: true,
-          radius: sp.radius,
-          shardId: sp.shardId,
-          imageUrl: shard?.imageUrl || "/elements/shard-1.png"
-        }
-      })
+    const spawnPoints = await getActiveSpawnPoints()
+
+    // Форматируем для фронтенда
+    const formattedSpawnPoints = spawnPoints.map(sp => ({
+      id: sp.id,
+      lat: sp.latitude,
+      lng: sp.longitude,
+      fragment: sp.shard.label,
+      rarity: sp.shard.card.rarity.toLowerCase(),
+      name: `Осколок ${sp.shard.label}`,
+      available: true,
+      radius: sp.radius,
+      shardId: sp.shard.id,
+      imageUrl: sp.shard.imageUrl
+    }))
 
     return NextResponse.json(formattedSpawnPoints)
   } catch (error) {

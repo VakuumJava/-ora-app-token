@@ -243,37 +243,45 @@ export default function InventoryPage() {
 
     if (chain === 'ton') {
       try {
-        // Простой mock-минт для TON
         const session = getUserSession()
         
-        // Имитируем минт (в реальности здесь будет вызов смарт-контракта)
-        const mintResponse = await fetch('/api/mint/mock', {
+        // Реальный TON минт через существующий API
+        const response = await fetch('/api/mint/ton', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             cardId: selectedCard.id,
             userId: session.userId,
-            chain: 'ton'
+            cardData: {
+              name: selectedCard.name,
+              description: selectedCard.description || 'Qora NFT Card',
+              imageUrl: selectedCard.imageUrl,
+              rarity: selectedCard.rarity,
+              attributes: {
+                model: selectedCard.model,
+                background: selectedCard.background,
+                rarity: selectedCard.rarity
+              }
+            }
           })
         })
 
-        const data = await mintResponse.json()
+        const data = await response.json()
 
-        if (!mintResponse.ok) {
-          throw new Error(data.message || 'Ошибка минта')
+        if (!response.ok) {
+          throw new Error(data.error || 'Ошибка минта')
         }
 
-        alert(`✅ ${data.message}\n\nToken ID: ${data.tokenId}\n\n⚠️ Это тестовый минт. Реальный blockchain минт будет добавлен позже.`)
+        alert(`✅ ${data.message}\n\nTransaction ID: ${data.transactionId}\n\nКарта отправлена на ваш TON кошелек!`)
         
-        // Обновляем инвентарь
+        // Перезагружаем инвентарь
         handleCraftSuccess()
       } catch (err: any) {
         alert(`❌ Ошибка минта: ${err.message}`)
         throw err
       }
     } else {
-      // Ethereum минт тоже в разработке
-      alert('🚧 Минт NFT на Ethereum в разработке. Скоро будет доступен!')
+      alert('🚧 Минт на Ethereum в разработке')
       throw new Error('ETH wallet not connected')
     }
   }

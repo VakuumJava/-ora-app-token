@@ -1,71 +1,71 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getUserFromCookies } from '@/lib/jwt'
 import { calculateDistance } from '@/lib/geo-utils'
-import { tempSpawnPoints, shardInfo, userInventory, saveAllData } from '@/lib/spawn-storage'
+import { collectShard, getOrCreateUser } from '@/lib/db-storage'
+import { prisma } from '@/lib/db'
 
 /**
- * POST /api/checkin - Чекин пользователя на точке спавна
+ * POST /api/checkin - Собрать осколок с точки спавна
  */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { spawnPointId, userLat, userLng, accuracy, userId: clientUserId } = body
+    const { spawnPointId, userLat, userLng, userId: userNickname } = body
 
-    // Используем userId из клиента (переданный из user-session)
-    const userId = clientUserId || "demo-user"
+    console.log('📍 Checkin request:', { spawnPointId, userLat, userLng, userNickname })
 
-    console.log('🎯 Чекин запрос:', { spawnPointId, userLat, userLng, userId })
-
-    if (!spawnPointId || userLat === undefined || userLng === undefined) {
-      return NextResponse.json(
-        { error: 'Spawn point ID and user coordinates are required' },
-        { status: 400 }
-      )
-    }
-
-    // Получаем точку спавна из временного хранилища
-    const spawnPoint = tempSpawnPoints.find((sp: any) => sp.id === spawnPointId)
-
-    console.log('📍 Найдена точка спавна:', spawnPoint)
-    console.log('📦 Всего точек в хранилище:', tempSpawnPoints.length)
-
-    if (!spawnPoint) {
-      return NextResponse.json({ 
-        error: 'Spawn point not found',
-        message: 'Точка спавна не найдена. Возможно, она была удалена.'
-      }, { status: 404 })
-    }
-
-    // Проверяем активность
-    if (!spawnPoint.active) {
-      return NextResponse.json({ 
-        error: 'Spawn point is not active',
-        message: 'Эта точка спавна неактивна'
+    if (!spawnPointId || !userLat || !userLng || !userNickname) {
+      return NextResponse.json({
+        error: 'Missing parameters',
+        message: 'Укажите все параметры'
       }, { status: 400 })
     }
 
-    // Проверяем срок действия
-    if (spawnPoint.expiresAt && new Date(spawnPoint.expiresAt) < new Date()) {
-      return NextResponse.json({ 
-        error: 'Spawn point has expired',
+    // Получаем или создаем пользователя
+    const user = await getOrCreateUser(userNickname)
+
+    // Находим spawn point
+    const spawnPoint = await prisma.spawnPoint.findUnique({
+      where: { id: spawnPointId },
+      include: {
+        shard: {
+          include: {
+            card: true
+          }
+        }
+      }
+    })
+
+    if (!spawnPoint) {
+      return NextResponse.json({
+        error: 'Spawn point not found',
+        message: 'Точка спавна не найдена'
+      }, { status: 404 })
+    }
+
+    if (!spawnPoint.active) {
+      return NextResponse.json({
+        error: 'Spawn point inactive',
+        message: 'Эта точка спавна больше не активна'
+      }, { status: 400 })
+    }
+
+    // Проверяем не истек ли срок
+    if (spawnPoint.expiresAt && spawnPoint.expiresAt < new Date()) {
+      return NextResponse.json({
+        error: 'Spawn point expired',
         message: 'Срок действия этой точки истек'
       }, { status: 400 })
     }
 
-    // Проверяем, не собирал ли пользователь уже осколок с этой точки
-    const alreadyCollected = userInventory.find(
-      item => item.userId === userId && item.spawnPointId === spawnPointId
-    )
-    
-    if (alreadyCollected) {
-      console.log('⚠️ Пользователь уже собирал осколок с этой точки')
-      return NextResponse.json({ 
-        error: 'Already collected',
-        message: '❌ Вы уже собрали осколок с этой точки!'
-      }, { status: 400 })
-    }
+    // Проверяем не собирал ли уже этот пользователь с этой точки
+    const alreadyCollected = await prisma.userShard.findFirst({
+      where: {
+        userId: user.id,
+        shardId: spawnPoint.shardId
+      }
+    })
 
-    // Вычисляем расстояние между пользователем и точкой спавна
+    // Вычисляем расстояние
     const distance = calculateDistance(
       userLat,
       userLng,
@@ -73,74 +73,37 @@ export async function POST(request: NextRequest) {
       spawnPoint.longitude
     )
 
-    console.log(`📏 Расстояние: ${distance.toFixed(2)}м, требуется: ${spawnPoint.radius || 5}м`)
+    console.log(`📏 Расстояние: ${distance.toFixed(2)}м, требуется: ${spawnPoint.radius}м`)
 
-    // Проверяем радиус (по умолчанию 5 метров)
-    const requiredRadius = spawnPoint.radius || 5
-    if (distance > requiredRadius) {
+    if (distance > spawnPoint.radius) {
       return NextResponse.json({
-        error: 'Too far from spawn point',
-        distance,
-        requiredRadius,
-        message: `Вы находитесь в ${Math.round(distance)}м от точки. Подойдите ближе (требуется ${requiredRadius}м).`
+        error: 'Too far',
+        message: `Вы слишком далеко! Подойдите ближе на ${Math.ceil(distance - spawnPoint.radius)}м`
       }, { status: 400 })
     }
 
-    // Проверяем точность GPS
-    if (accuracy && accuracy > 50) {
-      return NextResponse.json({
-        error: 'GPS accuracy too low',
-        accuracy,
-        message: 'Точность GPS слишком низкая. Попробуйте выйти на открытое пространство.'
-      }, { status: 400 })
-    }
+    // Собираем осколок
+    const userShard = await collectShard(user.id, spawnPoint.shardId)
 
-    // Получаем информацию об осколке
-    const shard = shardInfo[spawnPoint.shardId as keyof typeof shardInfo]
-    
-    if (!shard) {
-      return NextResponse.json({ 
-        error: 'Shard not found',
-        message: 'Информация об осколке не найдена'
-      }, { status: 404 })
-    }
+    console.log('✅ Осколок собран:', userShard.id)
 
-    console.log('✅ Чекин успешен! Осколок:', shard.label)
-
-    // Сохраняем осколок в инвентарь
-    const collectedId = `collected-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-    
-    const collectedShard = {
-      id: collectedId,
-      userId,
-      shardId: spawnPoint.shardId,
-      cardId: shard.cardId, // Сохраняем ID карты к которой относится осколок
-      spawnPointId: spawnPoint.id,
-      collectedAt: new Date()
-    }
-    
-    userInventory.push(collectedShard)
-    
-    console.log('💾 Осколок сохранен в инвентарь:', collectedShard)
-    console.log('📦 Всего осколков в инвентаре:', userInventory.length)
-
-    // Сохраняем данные в файл
-    saveAllData()
-
-    // Возвращаем успешный результат
     return NextResponse.json({
       success: true,
-      message: '🎉 Осколок успешно собран!',
+      message: '�� Осколок успешно собран!',
       shard: {
-        id: collectedId,
-        label: shard.label,
-        cardName: shard.name,
-        imageUrl: shard.imageUrl,
-        collectedAt: collectedShard.collectedAt
+        id: userShard.id,
+        label: userShard.shard.label,
+        cardName: userShard.shard.card.name,
+        imageUrl: userShard.shard.imageUrl,
+        collectedAt: userShard.collectedAt
       }
     })
-  } catch (error) {
-    console.error('Error during checkin:', error)
-    return NextResponse.json({ error: 'Failed to checkin' }, { status: 500 })
+
+  } catch (error: any) {
+    console.error('❌ Checkin error:', error)
+    return NextResponse.json({
+      error: 'Internal error',
+      message: error.message || 'Произошла ошибка'
+    }, { status: 500 })
   }
 }

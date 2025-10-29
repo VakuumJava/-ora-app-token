@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { tempSpawnPoints, shardMapping } from '@/lib/spawn-storage'
+import { createSpawnPoint } from '@/lib/db-storage'
 
 /**
  * POST /api/admin/spawn-points/create - Создание точки спавна админом
@@ -16,24 +16,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Создаем ID для точки спавна
-    const id = `spawn-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-    
-    const spawnPoint = {
-      id,
+    // Создаём точку спавна в БД
+    const spawnPoint = await createSpawnPoint({
       shardId,
       latitude,
       longitude,
       radius: radius || 5,
-      active: true,
-      expiresAt: expiresAt ? new Date(expiresAt) : null,
-      createdAt: new Date()
-    }
-
-    tempSpawnPoints.push(spawnPoint)
+      expiresAt: expiresAt ? new Date(expiresAt) : undefined
+    })
 
     console.log('✅ Точка спавна создана:', spawnPoint)
-    console.log('📍 Всего точек:', tempSpawnPoints.length)
 
     return NextResponse.json({
       success: true,
@@ -41,15 +33,17 @@ export async function POST(request: NextRequest) {
         id: spawnPoint.id,
         lat: spawnPoint.latitude,
         lng: spawnPoint.longitude,
-        fragment: shardMapping[shardId] || "A",
         radius: spawnPoint.radius,
         active: spawnPoint.active,
         expiresAt: spawnPoint.expiresAt,
         shardId: spawnPoint.shardId
       }
     })
-  } catch (error) {
-    console.error('Error creating spawn point:', error)
-    return NextResponse.json({ error: 'Failed to create spawn point' }, { status: 500 })
+  } catch (error: any) {
+    console.error('❌ Ошибка создания точки спавна:', error)
+    return NextResponse.json(
+      { error: 'Failed to create spawn point', details: error.message },
+      { status: 500 }
+    )
   }
 }

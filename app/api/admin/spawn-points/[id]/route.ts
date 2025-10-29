@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { tempSpawnPoints } from '@/lib/spawn-storage'
+import { prisma } from '@/lib/db'
 
 /**
  * DELETE /api/admin/spawn-points/[id] - Удаление точки спавна
@@ -11,20 +11,21 @@ export async function DELETE(
   try {
     const { id } = await context.params
     
-    const index = tempSpawnPoints.findIndex((sp: any) => sp.id === id)
-    
-    if (index === -1) {
-      return NextResponse.json({ error: 'Spawn point not found' }, { status: 404 })
-    }
-
-    tempSpawnPoints.splice(index, 1)
+    // Удаляем из БД
+    await prisma.spawnPoint.delete({
+      where: { id }
+    })
     
     console.log('🗑️ Точка спавна удалена:', id)
-    console.log('📍 Осталось точек:', tempSpawnPoints.length)
 
     return NextResponse.json({ success: true, message: 'Spawn point deleted' })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error deleting spawn point:', error)
+    
+    if (error.code === 'P2025') {
+      return NextResponse.json({ error: 'Spawn point not found' }, { status: 404 })
+    }
+    
     return NextResponse.json({ error: 'Failed to delete spawn point' }, { status: 500 })
   }
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { ethers } from 'ethers';
-import { userCards, userProfiles } from '@/lib/spawn-storage';
+import { prisma } from '@/lib/db';
+import { deleteCardAfterMint } from '@/lib/db-storage';
 import { CONTRACTS, QORA_NFT_ABI, GAS_CONFIG } from '@/lib/contracts-config';
 
 /**
@@ -27,8 +28,10 @@ export async function POST(request: Request) {
             );
         }
 
-        // Find user profile
-        const userProfile = userProfiles.find(p => p.id === userId);
+        // Find user in database
+        const userProfile = await prisma.user.findUnique({
+            where: { id: userId }
+        });
         if (!userProfile) {
             return NextResponse.json(
                 { error: 'User not found' },
@@ -36,9 +39,17 @@ export async function POST(request: Request) {
             );
         }
 
-        // Find the card
-        const card = userCards.find(c => c.id === cardId && c.userId === userId);
-        if (!card) {
+        // Find the card in database
+        const userCard = await prisma.userCard.findFirst({
+            where: {
+                id: cardId,
+                userId: userId,
+                minted: false
+            },
+            include: { card: true }
+        });
+
+        if (!userCard) {
             return NextResponse.json(
                 { error: 'Card not found or not owned by user' },
                 { status: 404 }
@@ -46,13 +57,9 @@ export async function POST(request: Request) {
         }
 
         // Check if already minted
-        if (card.mintedOn) {
+        if (userCard.minted) {
             return NextResponse.json(
-                { 
-                    error: 'Card already minted',
-                    chain: card.mintedOn,
-                    txHash: card.txHash 
-                },
+                { error: 'Card already minted' },
                 { status: 400 }
             );
         }
@@ -75,49 +82,43 @@ export async function POST(request: Request) {
         }
 
         // Generate metadata URI
-        const tokenURI = `https://qora.app/api/nft/ethereum/${cardId}`;
+        const metadataUri = `https://qora.app/api/nft/ethereum/${cardId}`;
 
-        // Create contract interface
-        const contract = new ethers.Interface(QORA_NFT_ABI);
-
-        // Encode mint function call
-        const mintData = contract.encodeFunctionData('mintCard', [
+        // Create contract instance for encoding
+        const iface = new ethers.Interface(QORA_NFT_ABI);
+        const data = iface.encodeFunctionData('mintCard', [
             walletAddress,
-            card.model,
-            card.background,
-            tokenURI,
+            userCard.card.name,
+            userCard.card.rarity,
+            metadataUri
         ]);
 
-        // Estimate gas (this is approximate - user's wallet will recalculate)
-        const gasLimit = GAS_CONFIG.ETHEREUM.GAS_LIMIT;
-
-        // Prepare transaction for MetaMask/WalletConnect
+        // Prepare transaction object
         const transaction = {
             to: contractAddress,
             from: walletAddress,
-            data: mintData,
-            gasLimit: gasLimit.toString(),
-            chainId: CONTRACTS.ETHEREUM.MAINNET.CHAIN_ID,
+            data: data,
+            value: ethers.parseEther('0.01').toString(), // 0.01 ETH mint fee
         };
 
         console.log('✅ Mint transaction prepared:', {
             contract: contractAddress,
             recipient: walletAddress,
             cardId,
-            model: card.model,
-            background: card.background,
+            cardName: userCard.card.name,
+            rarity: userCard.card.rarity,
         });
 
-        // Return transaction data for wallet to sign
+        // Return transaction data for MetaMask/WalletConnect to sign
         return NextResponse.json({
             success: true,
             transaction,
             cardDetails: {
-                id: card.id,
-                cardId: card.cardId,
-                model: card.model,
-                background: card.background,
-                tokenURI,
+                id: userCard.id,
+                cardId: userCard.cardId,
+                name: userCard.card.name,
+                rarity: userCard.card.rarity,
+                metadataUri,
             },
             message: 'Transaction prepared. Please sign with your wallet.',
         });
@@ -142,7 +143,19 @@ export async function PUT(request: Request) {
 
         console.log('✅ Confirming Ethereum mint:', { cardId, txHash, tokenId });
 
-        const card = userCards.find(c => c.id === cardId);
+        // Validate inputs
+        if (!cardId || !txHash) {
+            return NextResponse.json(
+                { error: 'Missing cardId or txHash' },
+                { status: 400 }
+            );
+        }
+
+        // Check if card exists
+        const card = await prisma.userCard.findUnique({
+            where: { id: cardId }
+        });
+
         if (!card) {
             return NextResponse.json(
                 { error: 'Card not found' },
@@ -150,30 +163,21 @@ export async function PUT(request: Request) {
             );
         }
 
-        // Update card as minted
-        card.mintedOn = 'ethereum';
-        card.txHash = txHash;
-        if (tokenId) {
-            card.tokenId = tokenId;
-        }
+        // Delete card from database (it's now in blockchain!)
+        await deleteCardAfterMint(cardId, tokenId || null, txHash);
 
+        console.log('🗑️ Карта удалена из базы после минта');
         console.log('🎉 Card minted on Ethereum:', {
-            cardId: card.id,
+            cardId,
             txHash,
-            tokenId: card.tokenId,
             explorer: `https://etherscan.io/tx/${txHash}`,
         });
 
         return NextResponse.json({
             success: true,
-            card: {
-                id: card.id,
-                mintedOn: card.mintedOn,
-                txHash: card.txHash,
-                tokenId: card.tokenId,
-                explorerUrl: `https://etherscan.io/tx/${txHash}`,
-            },
-            message: 'Card successfully minted on Ethereum blockchain!',
+            message: '🎉 NFT успешно заминчен! Карта отправлена на ваш кошелек.',
+            transactionId: txHash,
+            explorerUrl: `https://etherscan.io/tx/${txHash}`,
         });
 
     } catch (error: any) {

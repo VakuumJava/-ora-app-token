@@ -1,26 +1,20 @@
 import { NextResponse } from 'next/server'
-import { userInventory, userCards } from '@/lib/spawn-storage'
+import { getUserStats, getOrCreateUser } from '@/lib/db-storage'
 
 export async function GET(request: Request) {
   try {
-    // Получаем userId из query параметров
     const { searchParams } = new URL(request.url)
-    const userId = searchParams.get('userId') || 'demo-user'
+    const userNickname = searchParams.get('userId') || 'demo-user'
 
-    console.log('📊 Запрос статистики для:', userId)
+    console.log('📊 Запрос статистики для:', userNickname)
 
-    // Подсчитываем статистику из in-memory хранилища
-    const userShards = userInventory.filter(item => item.userId === userId)
-    const userNFTCards = userCards.filter(item => item.userId === userId)
+    // Получаем пользователя
+    const user = await getOrCreateUser(userNickname)
 
-    // Возвращаем статистику
-    return NextResponse.json({
-      totalShards: userShards.length,
-      totalCards: userNFTCards.length,
-      daysOnSite: 0, // Пока не отслеживаем
-      shardsFound: userShards.length,
-      cardsOwned: userNFTCards.length,
-    })
+    // Получаем статистику
+    const stats = await getUserStats(user.id)
+
+    return NextResponse.json(stats)
   } catch (error) {
     console.error('Error fetching user stats:', error)
     return NextResponse.json(

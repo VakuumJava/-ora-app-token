@@ -1,18 +1,32 @@
 import { NextResponse } from 'next/server';
 import { Address, beginCell, toNano } from '@ton/core';
-import { userCards, userProfiles } from '@/lib/spawn-storage';
-import { CONTRACTS, TON_OPERATIONS, GAS_CONFIG } from '@/lib/contracts-config';
+import { deleteCardAfterMint } from '@/lib/db-storage';
+import { prisma } from '@/lib/db';
+
+// TON Configuration
+const TON_OPERATIONS = {
+    MINT: 1,
+};
+
+const GAS_CONFIG = {
+    TON: {
+        MINT_FEE: '0.1', // 0.1 TON
+    },
+};
+
+const CONTRACTS = {
+    TON: {
+        MAINNET: {
+            COLLECTION_ADDRESS: process.env.NEXT_PUBLIC_TON_COLLECTION_ADDRESS || '',
+        },
+    },
+};
 
 /**
- * TON NFT Minting API
- * 
- * This endpoint generates mint transaction data that the frontend
- * will sign using TonConnect and send to the TON blockchain.
- * 
+ * Prepare TON mint transaction
  * POST /api/mint/ton
  * Body: { userId: string, cardId: string, walletAddress: string }
  */
-
 export async function POST(request: Request) {
     try {
         const { userId, cardId, walletAddress } = await request.json();
@@ -27,8 +41,10 @@ export async function POST(request: Request) {
             );
         }
 
-        // Find user profile
-        const userProfile = userProfiles.find(p => p.id === userId);
+        // Find user in database
+        const userProfile = await prisma.user.findUnique({
+            where: { id: userId }
+        });
         if (!userProfile) {
             return NextResponse.json(
                 { error: 'User not found' },
@@ -36,9 +52,19 @@ export async function POST(request: Request) {
             );
         }
 
-        // Find the card
-        const card = userCards.find(c => c.id === cardId && c.userId === userId);
-        if (!card) {
+        // Find the card in database (with card details)
+        const userCard = await prisma.userCard.findFirst({
+            where: {
+                id: cardId,
+                userId: userId,
+                minted: false
+            },
+            include: {
+                card: true
+            }
+        });
+
+        if (!userCard) {
             return NextResponse.json(
                 { error: 'Card not found or not owned by user' },
                 { status: 404 }
@@ -46,12 +72,10 @@ export async function POST(request: Request) {
         }
 
         // Check if already minted
-        if (card.mintedOn) {
+        if (userCard.minted) {
             return NextResponse.json(
                 { 
-                    error: 'Card already minted',
-                    chain: card.mintedOn,
-                    txHash: card.txHash 
+                    error: 'Card already minted'
                 },
                 { status: 400 }
             );
@@ -115,8 +139,8 @@ export async function POST(request: Request) {
             collection: collectionAddress,
             recipient: walletAddress,
             cardId,
-            model: card.model,
-            background: card.background,
+            cardName: userCard.card.name,
+            rarity: userCard.card.rarity,
         });
 
         // Return transaction data for TonConnect to sign
@@ -124,10 +148,10 @@ export async function POST(request: Request) {
             success: true,
             transaction,
             cardDetails: {
-                id: card.id,
-                cardId: card.cardId,
-                model: card.model,
-                background: card.background,
+                id: userCard.id,
+                cardId: userCard.cardId,
+                name: userCard.card.name,
+                rarity: userCard.card.rarity,
                 metadataUri,
             },
             message: 'Transaction prepared. Please sign with TonConnect.',
@@ -145,15 +169,27 @@ export async function POST(request: Request) {
 /**
  * Confirm mint after transaction is sent
  * PUT /api/mint/ton
- * Body: { cardId: string, txHash: string }
+ * Body: { cardId: string, txHash: string, tokenId?: string }
  */
 export async function PUT(request: Request) {
     try {
-        const { cardId, txHash } = await request.json();
+        const { cardId, txHash, tokenId } = await request.json();
 
-        console.log('✅ Confirming TON mint:', { cardId, txHash });
+        console.log('✅ Confirming TON mint:', { cardId, txHash, tokenId });
 
-        const card = userCards.find(c => c.id === cardId);
+        // Validate inputs
+        if (!cardId || !txHash) {
+            return NextResponse.json(
+                { error: 'Missing cardId or txHash' },
+                { status: 400 }
+            );
+        }
+
+        // Check if card exists
+        const card = await prisma.userCard.findUnique({
+            where: { id: cardId }
+        });
+
         if (!card) {
             return NextResponse.json(
                 { error: 'Card not found' },
@@ -161,25 +197,21 @@ export async function PUT(request: Request) {
             );
         }
 
-        // Update card as minted
-        card.mintedOn = 'ton';
-        card.txHash = txHash;
-
+        // Delete card from database (it's now in blockchain!)
+        await deleteCardAfterMint(cardId, tokenId || null, txHash);
+        
+        console.log('🗑️ Карта удалена из базы после минта');
         console.log('🎉 Card minted on TON:', {
-            cardId: card.id,
+            cardId,
             txHash,
             explorer: `https://tonscan.org/tx/${txHash}`,
         });
 
         return NextResponse.json({
             success: true,
-            card: {
-                id: card.id,
-                mintedOn: card.mintedOn,
-                txHash: card.txHash,
-                explorerUrl: `https://tonscan.org/tx/${txHash}`,
-            },
-            message: 'Card successfully minted on TON blockchain!',
+            message: '🎉 NFT успешно заминчен! Карта отправлена на ваш кошелек.',
+            transactionId: txHash,
+            explorerUrl: `https://tonscan.org/tx/${txHash}`,
         });
 
     } catch (error: any) {

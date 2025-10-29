@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { userCards } from '@/lib/spawn-storage';
+import { prisma } from '@/lib/db';
 
 /**
  * NFT Metadata API for TON
@@ -15,10 +15,13 @@ export async function GET(
     try {
         const cardId = params.id;
 
-        // Find card by ID
-        const card = userCards.find(c => c.id === cardId);
+        // Find card by ID in database
+        const userCard = await prisma.userCard.findUnique({
+            where: { id: cardId },
+            include: { card: true }
+        });
 
-        if (!card) {
+        if (!userCard) {
             return NextResponse.json(
                 { error: 'Card not found' },
                 { status: 404 }
@@ -27,29 +30,21 @@ export async function GET(
 
         // TEP-64 compliant metadata
         const metadata = {
-            name: `Qora Card #${card.id}`,
-            description: `Legendary Qora NFT Card crafted from ancient shards. Model: ${card.model}, Background: ${card.background}`,
-            image: `https://qora.app/craftedstone.png`, // Card image URL
+            name: `${userCard.card.name} #${userCard.id.slice(0, 8)}`,
+            description: userCard.card.description || `Legendary Qora NFT Card. Rarity: ${userCard.card.rarity}`,
+            image: userCard.card.imageUrl || `https://qora.app/craftedstone.png`,
             attributes: [
                 {
-                    trait_type: 'Model',
-                    value: card.model,
-                },
-                {
-                    trait_type: 'Background',
-                    value: card.background,
+                    trait_type: 'Card Name',
+                    value: userCard.card.name,
                 },
                 {
                     trait_type: 'Rarity',
-                    value: 'Legendary',
-                },
-                {
-                    trait_type: 'Card Type',
-                    value: 'Qora Genesis',
+                    value: userCard.card.rarity,
                 },
                 {
                     trait_type: 'Crafted At',
-                    value: card.craftedAt.toISOString(),
+                    value: userCard.assembledAt.toISOString(),
                     display_type: 'date',
                 },
             ],
@@ -57,13 +52,13 @@ export async function GET(
             decimals: '0',
             amount: '1',
             // OpenSea compatibility
-            external_url: `https://qora.app/card/${card.id}`,
+            external_url: `https://qora.app/card/${userCard.id}`,
         };
 
         return NextResponse.json(metadata);
 
     } catch (error: any) {
-        console.error('❌ Metadata fetch error:', error);
+        console.error('❌ NFT Metadata error (TON):', error);
         return NextResponse.json(
             { error: 'Internal server error', details: error.message },
             { status: 500 }
