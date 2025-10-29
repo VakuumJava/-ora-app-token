@@ -8,6 +8,7 @@ import { useState, useEffect } from "react"
 import { CheckinModal } from "@/components/checkin-modal"
 import Link from "next/link"
 import { getUserSession } from "@/lib/user-session"
+import { getCollectedSpawnIds, addCollectedSpawnId } from "@/lib/client-storage"
 
 const MapComponent = dynamic(() => import("@/components/map-component"), { 
   ssr: false,
@@ -76,19 +77,10 @@ export default function MapPage() {
     const session = getUserSession()
     setUserId(session.userId)
     
-    // Загружаем собранные осколки пользователя из localStorage
-    const inventory = localStorage.getItem('qora_user_inventory')
-    if (inventory) {
-      try {
-        const parsed = JSON.parse(inventory)
-        const userShards = parsed.filter((s: any) => s.userId === session.userId)
-        const spawnIds = userShards.map((s: any) => s.spawnPointId)
-        setCollectedSpawnIds(spawnIds)
-        console.log('🗺️ Собранные точки пользователя:', spawnIds)
-      } catch (e) {
-        console.error('Error parsing inventory:', e)
-      }
-    }
+    // Загружаем собранные точки спавна из client-storage
+    const collected = getCollectedSpawnIds(session.userId)
+    setCollectedSpawnIds(collected)
+    console.log('🗺️ Собранные точки пользователя:', collected)
   }, [])
 
   // Загружаем точки спавна из API
@@ -354,10 +346,18 @@ export default function MapPage() {
             }}
             onSuccess={() => {
               setShowCheckinModal(false)
-              setSelectedFragment(null)
               
-              // Добавляем собранный spawn point в список
-              setCollectedSpawnIds(prev => [...prev, selectedFragment.id])
+              // Сохраняем собранную точку в localStorage через client-storage
+              if (selectedFragment) {
+                addCollectedSpawnId(userId, selectedFragment.id)
+                
+                // Обновляем состояние для немедленного удаления с карты
+                setCollectedSpawnIds(prev => [...prev, selectedFragment.id])
+                
+                console.log('✅ Точка собрана и сохранена:', selectedFragment.id)
+              }
+              
+              setSelectedFragment(null)
               
               // Перезагружаем точки спавна
               fetch('/api/spawn-points')

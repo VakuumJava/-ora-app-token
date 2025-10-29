@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserFromCookies } from '@/lib/jwt'
 import { calculateDistance } from '@/lib/geo-utils'
-import { tempSpawnPoints, shardInfo, userInventory, saveUserInventory } from '@/lib/spawn-storage'
+import { tempSpawnPoints, shardInfo, userInventory } from '@/lib/spawn-storage'
 
 /**
  * POST /api/checkin - Чекин пользователя на точке спавна
@@ -120,7 +120,6 @@ export async function POST(request: NextRequest) {
     }
     
     userInventory.push(collectedShard)
-    saveUserInventory() // Сохраняем в localStorage
     
     console.log('💾 Осколок сохранен в инвентарь:', collectedShard)
     console.log('📦 Всего осколков в инвентаре:', userInventory.length)

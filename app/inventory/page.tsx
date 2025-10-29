@@ -9,6 +9,7 @@ import { CraftModal } from "@/components/craft-modal"
 import { CardDetailsModal } from "@/components/card-details-modal"
 import { X, Loader2, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { getUserSession } from "@/lib/user-session"
 
 interface InventoryData {
   fragments: {
@@ -114,17 +115,14 @@ export default function InventoryPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Для демо пропускаем проверку авторизации
-        // Проверяем авторизацию
-        // const authResponse = await fetch('/api/auth/me')
-        // 
-        // if (!authResponse.ok) {
-        //   router.push('/login')
-        //   return
-        // }
+        setIsLoading(true)
+        
+        // Получаем текущую сессию пользователя
+        const session = getUserSession()
+        console.log('👤 Текущий пользователь:', session.userId)
 
-        // Загружаем инвентарь
-        const inventoryResponse = await fetch('/api/inventory')
+        // Загружаем инвентарь с userId
+        const inventoryResponse = await fetch(`/api/inventory?userId=${session.userId}`)
         
         if (!inventoryResponse.ok) {
           throw new Error('Ошибка загрузки инвентаря')
@@ -140,7 +138,7 @@ export default function InventoryPage() {
         setIsLoading(false)
       }
     }
-
+    
     fetchData()
   }, [router])
 

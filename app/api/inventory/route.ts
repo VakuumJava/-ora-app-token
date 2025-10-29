@@ -1,14 +1,18 @@
 import { NextResponse } from 'next/server'
 import { userInventory, userCards, shardInfo, cardInfo, userProfiles } from '@/lib/spawn-storage'
+import { headers } from 'next/headers'
 
 /**
- * GET /api/inventory
- * Получает инвентарь пользователя: фрагменты и карты (упрощенная демо-версия)
+ * GET /api/inventory?userId=xxx
+ * Получает инвентарь пользователя: фрагменты и карты
  */
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    // Для демо используем упрощенную версию с in-memory хранилищем
-    const userId = "demo-user" // В реальности это user.userId из JWT
+    // Получаем userId из query параметров
+    const { searchParams } = new URL(request.url)
+    const userId = searchParams.get('userId') || 'demo-user'
+    
+    console.log(`📦 Запрос инвентаря для пользователя: ${userId}`)
     
     // Получаем осколки из временного хранилища
     const userShards = userInventory.filter(item => item.userId === userId)
