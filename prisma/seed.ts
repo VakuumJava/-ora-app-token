@@ -20,90 +20,50 @@ async function main() {
 
   console.log('✅ Collection created:', collection.name)
 
-  // Создаём карточки разных редкостей
-  const cards = [
-    {
-      id: 'card-common-1',
-      name: 'Каменная Пирамида',
-      description: 'Древний артефакт с загадочными символами',
-      rarity: 'common',
+  // Создаём ОДНУ карточку
+  const card = await prisma.card.upsert({
+    where: { id: 'card-qora-main' },
+    update: {},
+    create: {
+      id: 'card-qora-main',
+      name: 'Qora Card',
+      description: 'Основная карточка Qora NFT',
+      rarity: 'rare',
       imageUrl: '/image 17.png',
       supplyLimit: 1000,
+      collectionId: collection.id,
     },
-    {
-      id: 'card-uncommon-1',
-      name: 'Кристальное Дерево',
-      description: 'Редкий предмет, найденный в различных локациях',
-      rarity: 'uncommon',
-      imageUrl: '/image 18.png',
-      supplyLimit: 500,
-    },
-    {
-      id: 'card-rare-1',
-      name: 'Изумрудная Сфера',
-      description: 'Ценный артефакт с особыми свойствами',
-      rarity: 'rare',
-      imageUrl: '/image 19.png',
-      supplyLimit: 200,
-    },
-    {
-      id: 'card-epic-1',
-      name: 'Золотой Дракон',
-      description: 'Эпический предмет невероятной силы',
-      rarity: 'epic',
-      imageUrl: '/image 19.png',
-      supplyLimit: 50,
-    },
-    {
-      id: 'card-legendary-1',
-      name: 'Корона Судьбы',
-      description: 'Легендарное сокровище невероятной редкости',
-      rarity: 'legendary',
-      imageUrl: '/image 20.png',
-      supplyLimit: 10,
-    },
-  ]
+  })
 
-  for (const cardData of cards) {
-    const card = await prisma.card.upsert({
-      where: { id: cardData.id },
-      update: {},
-      create: {
-        ...cardData,
-        collectionId: collection.id,
-      },
-    })
+  console.log(`✅ Card created: ${card.name}`)
 
-    console.log(`✅ Card created: ${card.name} (${card.rarity})`)
+  // Создаём 3 осколка для карточки
+  const shardImages = {
+    'A': '/elements/shard-1.png',
+    'B': '/elements/shard-2.png',
+    'C': '/elements/shard-3.png',
+  }
 
-    // Создаём 3 осколка для каждой карточки
-    const shardImages = {
-      'A': '/elements/shard-1.png',
-      'B': '/elements/shard-2.png',
-      'C': '/elements/shard-3.png',
-    }
-
-    for (const label of ['A', 'B', 'C']) {
-      await prisma.shard.upsert({
-        where: {
-          cardId_label: {
-            cardId: card.id,
-            label,
-          },
-        },
-        update: {
-          imageUrl: shardImages[label as 'A' | 'B' | 'C'],
-        },
-        create: {
+  for (const label of ['A', 'B', 'C']) {
+    await prisma.shard.upsert({
+      where: {
+        cardId_label: {
           cardId: card.id,
           label,
-          imageUrl: shardImages[label as 'A' | 'B' | 'C'],
         },
-      })
-    }
-
-    console.log(`  ✅ Created 3 shards for ${card.name}`)
+      },
+      update: {
+        imageUrl: shardImages[label as 'A' | 'B' | 'C'],
+      },
+      create: {
+        cardId: card.id,
+        label,
+        imageUrl: shardImages[label as 'A' | 'B' | 'C'],
+      },
+    })
   }
+
+  console.log(`✅ Created 3 shards for ${card.name}`)
 
   console.log('✨ Seeding completed!')
 }
