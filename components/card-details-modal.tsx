@@ -67,14 +67,69 @@ export function CardDetailsModal({
   }
 
   const handleMint = async (chain: 'ton' | 'eth') => {
+    if (chain === 'ton' && !isTonConnected) {
+      tonConnectUI.openModal()
+      return
+    }
+
     setIsMinting(true)
     setError(null)
 
     try {
-      await onMint(chain)
-      onClose()
+      if (chain === 'ton') {
+        // Реальный TON минт через TonConnect
+        const response = await fetch('/api/mint/ton', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: card.owner || 'demo_user',
+            cardId: card.id,
+            walletAddress: tonAddress,
+          })
+        })
+
+        const data = await response.json()
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Ошибка подготовки транзакции')
+        }
+
+        // Отправляем транзакцию через TonConnect
+        console.log('📤 Отправка TON транзакции:', data.transaction)
+        const result = await tonConnectUI.sendTransaction(data.transaction)
+        
+        console.log('✅ Транзакция отправлена:', result)
+
+        // Подтверждаем минт на сервере
+        const confirmResponse = await fetch('/api/mint/ton', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            cardId: card.id,
+            txHash: result.boc, // transaction hash
+          })
+        })
+
+        const confirmData = await confirmResponse.json()
+
+        if (!confirmResponse.ok) {
+          throw new Error(confirmData.error || 'Ошибка подтверждения минта')
+        }
+
+        alert(`✅ ${confirmData.message}\n\nТранзакция: ${confirmData.explorerUrl}`)
+        
+        // Вызываем callback для обновления инвентаря
+        await onMint(chain)
+        
+        onClose()
+      } else {
+        throw new Error('Ethereum минт пока не поддерживается')
+      }
     } catch (err: any) {
-      setError(err.message || 'Ошибка при минте')
+      console.error('❌ Ошибка минта:', err)
+      if (err.message && !err.message.includes('User rejects')) {
+        setError(err.message || 'Ошибка при минте')
+      }
     } finally {
       setIsMinting(false)
     }

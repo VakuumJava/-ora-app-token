@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import Script from "next/script"
 import { TonConnectProvider } from "@/components/ton-connect-provider"
+import { AutoLogin } from "@/components/auto-login"
 import "./globals.css"
 
 const _geist = Geist({ subsets: ["latin"] })
@@ -49,6 +50,7 @@ export default function RootLayout({
       </head>
       <body className={`font-sans antialiased`}>
         <TonConnectProvider>
+          <AutoLogin />
           {children}
         </TonConnectProvider>
         <Analytics />

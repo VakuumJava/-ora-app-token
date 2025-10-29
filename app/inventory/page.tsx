@@ -199,12 +199,16 @@ export default function InventoryPage() {
 
   // Обработчик успешного крафта
   const handleCraftSuccess = () => {
-    // Перезагружаем инвентарь
-    fetch('/api/inventory')
+    const session = getUserSession()
+    
+    // Перезагружаем инвентарь с userId
+    fetch(`/api/inventory?userId=${session.userId}`)
       .then(res => res.json())
       .then(data => {
-        console.log('📦 Инвентарь перезагружен после крафта:', data)
+        console.log('📦 Инвентарь перезагружен после крафта/минта:', data)
         setInventory(data)
+        // Закрываем модалку если она открыта
+        setSelectedCard(null)
       })
       .catch(console.error)
   }
@@ -237,53 +241,16 @@ export default function InventoryPage() {
     handleCraftSuccess()
   }
 
-  // Обработчик минта NFT
+  // Обработчик минта NFT через CardDetailsModal
   const handleMint = async (chain: 'ton' | 'eth') => {
-    if (!selectedCard) return
-
-    if (chain === 'ton') {
-      try {
-        const session = getUserSession()
-        
-        // Реальный TON минт через существующий API
-        const response = await fetch('/api/mint/ton', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            cardId: selectedCard.id,
-            userId: session.userId,
-            cardData: {
-              name: selectedCard.name,
-              description: selectedCard.description || 'Qora NFT Card',
-              imageUrl: selectedCard.imageUrl,
-              rarity: selectedCard.rarity,
-              attributes: {
-                model: selectedCard.model,
-                background: selectedCard.background,
-                rarity: selectedCard.rarity
-              }
-            }
-          })
-        })
-
-        const data = await response.json()
-
-        if (!response.ok) {
-          throw new Error(data.error || 'Ошибка минта')
-        }
-
-        alert(`✅ ${data.message}\n\nTransaction ID: ${data.transactionId}\n\nКарта отправлена на ваш TON кошелек!`)
-        
-        // Перезагружаем инвентарь
-        handleCraftSuccess()
-      } catch (err: any) {
-        alert(`❌ Ошибка минта: ${err.message}`)
-        throw err
-      }
-    } else {
-      alert('🚧 Минт на Ethereum в разработке')
-      throw new Error('ETH wallet not connected')
-    }
+    // Этот обработчик вызывается из CardDetailsModal
+    // CardDetailsModal уже реализует реальный TON минт
+    // После успешного минта модалка закроется и мы перезагрузим инвентарь
+    
+    // Перезагружаем инвентарь после успешного минта
+    setTimeout(() => {
+      handleCraftSuccess()
+    }, 1000)
   }
 
   return (

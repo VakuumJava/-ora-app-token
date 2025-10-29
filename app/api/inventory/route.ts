@@ -35,6 +35,15 @@ export async function GET(request: Request) {
       legendary: 0
     }
     
+    // Подсчитываем осколки по редкости карточки
+    shards.forEach(us => {
+      const rarity = us.shard.card.rarity.toLowerCase()
+      if (rarity in shardsByRarity) {
+        shardsByRarity[rarity]++
+      }
+    })
+    
+    // Подсчитываем карты по редкости
     cards.forEach(uc => {
       const rarity = uc.card.rarity.toLowerCase()
       if (rarity in cardsByRarity) {

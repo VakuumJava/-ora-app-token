@@ -68,6 +68,14 @@ function LoginForm() {
       }
 
       // Успешный вход! Токены автоматически сохранены в cookies
+      
+      // 💾 Сохраняем userId в localStorage для автологина
+      if (data.user && data.user.id) {
+        localStorage.setItem('qora_autologin_userId', data.user.id)
+        localStorage.setItem('qora_autologin_username', data.user.nickname || data.user.email)
+        console.log('💾 Автологин сохранён:', data.user.id)
+      }
+      
       router.push("/")
       router.refresh()
     } catch (err) {
