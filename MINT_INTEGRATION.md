@@ -373,7 +373,6 @@ Common errors and solutions:
 | "Gas too low" | Increase gas limit |
 | "Contract not deployed" | Check environment config |
 
-## Next Steps
 
 After integration:
 
