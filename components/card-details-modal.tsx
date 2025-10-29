@@ -77,12 +77,19 @@ export function CardDetailsModal({
 
     try {
       if (chain === 'ton') {
+        // Получаем реальный userId из localStorage (автологин)
+        const savedUserId = localStorage.getItem('qora_autologin_userId')
+        
+        if (!savedUserId) {
+          throw new Error('Пользователь не авторизован. Войдите в систему.')
+        }
+        
         // Реальный TON минт через TonConnect
         const response = await fetch('/api/mint/ton', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            userId: card.owner || 'demo_user',
+            userId: savedUserId, // UUID пользователя
             cardId: card.id,
             walletAddress: tonAddress,
           })
