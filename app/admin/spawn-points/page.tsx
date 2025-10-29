@@ -55,17 +55,21 @@ export default function AdminSpawnPointsPage() {
       const response = await fetch('/api/admin/shards')
       if (response.ok) {
         const data = await response.json()
-        // Преобразуем в формат Shard с displayName
+        console.log('📋 Loaded shards:', data)
+        // Преобразуем в формат Shard
         const formattedShards = data.shards.map((s: any) => ({
           id: s.id,
-          label: s.label,
-          imageUrl: s.cardImage || `/elements/shard-${s.label === 'A' ? '1' : s.label === 'B' ? '2' : '3'}.png`,
+          label: s.label as Fragment,
+          imageUrl: `/elements/shard-${s.label === 'A' ? '1' : s.label === 'B' ? '2' : '3'}.png`,
           displayName: s.displayName
         }))
+        console.log('✅ Formatted shards:', formattedShards)
         setShards(formattedShards)
+      } else {
+        console.error('❌ Failed to load shards:', response.status)
       }
     } catch (error) {
-      console.error('Error loading shards:', error)
+      console.error('❌ Error loading shards:', error)
     } finally {
       setIsLoadingShards(false)
     }
