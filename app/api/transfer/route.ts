@@ -6,17 +6,15 @@ import { userCards, userProfiles } from '@/lib/spawn-storage'
  */
 export async function POST(request: NextRequest) {
   try {
-    const userId = "demo-user" // В реальности это user.userId из JWT
-    
     const body = await request.json()
-    const { cardId, recipientUsername } = body
+    const { cardId, recipientUsername, userId } = body
     
-    console.log('📤 Запрос на передачу:', { cardId, recipientUsername })
+    console.log('📤 Запрос на передачу:', { cardId, recipientUsername, userId })
     
-    if (!cardId || !recipientUsername) {
+    if (!cardId || !recipientUsername || !userId) {
       return NextResponse.json({
         error: 'Missing parameters',
-        message: 'Укажите ID карты и username получателя'
+        message: 'Укажите ID карты, username получателя и userId'
       }, { status: 400 })
     }
     

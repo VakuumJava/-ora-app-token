@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { userInventory, userCards, shardInfo, cardInfo, cardModels, cardBackgrounds } from '@/lib/spawn-storage'
+import { userInventory, userCards, shardInfo, cardInfo, cardModels, cardBackgrounds, userProfiles } from '@/lib/spawn-storage'
 
 /**
  * POST /api/craft - Скрафтить NFT карту из 3 осколков
@@ -89,6 +89,10 @@ export async function POST(request: NextRequest) {
     
     console.log('✅ Все проверки пройдены! Начинаем крафт...')
     
+    // Находим username пользователя
+    const userProfile = userProfiles.find(p => p.id === userId)
+    const username = userProfile?.username || userId
+    
     // Удаляем использованные осколки из инвентаря
     shardIds.forEach(shardId => {
       const index = userInventory.findIndex(item => item.id === shardId)
@@ -110,12 +114,14 @@ export async function POST(request: NextRequest) {
       craftedAt: new Date(),
       usedShardIds: shardIds,
       model: randomModel,
-      background: randomBackground
+      background: randomBackground,
+      owner: username // Добавляем username владельца
     }
     
     userCards.push(craftedCard)
     
     console.log('🎉 NFT карта создана:', craftedCard)
+    console.log('  - Владелец:', username)
     console.log('  - Модель:', randomModel)
     console.log('  - Фон:', randomBackground)
     console.log('📊 Статистика:')

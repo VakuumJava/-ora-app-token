@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { X, Send, DollarSign, Coins, Loader2, AlertCircle } from 'lucide-react'
+import { useTonAddress, useTonConnectUI } from '@tonconnect/ui-react'
 
 interface CardDetailsModalProps {
   card: {
@@ -40,6 +41,11 @@ export function CardDetailsModal({
   const [isTransferring, setIsTransferring] = useState(false)
   const [isMinting, setIsMinting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // TON Connect
+  const tonAddress = useTonAddress()
+  const [tonConnectUI] = useTonConnectUI()
+  const isTonConnected = !!tonAddress
 
   const handleTransfer = async () => {
     if (!transferUsername.trim()) {
@@ -211,9 +217,11 @@ export function CardDetailsModal({
             <div className="px-4 pb-4">
               <div className="bg-[#2c2c2e] rounded-2xl p-4">
                 <p className="text-sm text-gray-400 mb-3">Выберите сеть для минта:</p>
+                
+                {/* TON Network */}
                 <div className="space-y-2">
                   <button
-                    onClick={() => handleMint('ton')}
+                    onClick={() => isTonConnected ? handleMint('ton') : tonConnectUI.openModal()}
                     disabled={isMinting}
                     className="w-full p-4 bg-[#1c1c1e] hover:bg-[#0088cc]/20 border border-white/10 hover:border-[#0088cc] rounded-xl text-left transition disabled:opacity-50 disabled:cursor-not-allowed"
                   >
@@ -221,12 +229,18 @@ export function CardDetailsModal({
                       <div className="w-10 h-10 rounded-full bg-[#0088cc] flex items-center justify-center">
                         <Coins className="w-5 h-5 text-white" />
                       </div>
-                      <div>
+                      <div className="flex-1">
                         <p className="text-white font-medium">TON Network</p>
-                        <p className="text-xs text-gray-400">Mint на TON кошелёк</p>
+                        {isTonConnected ? (
+                          <p className="text-xs text-green-400">✓ Кошелек подключен: {tonAddress.slice(0, 8)}...{tonAddress.slice(-6)}</p>
+                        ) : (
+                          <p className="text-xs text-yellow-400">⚠ Нажмите чтобы подключить кошелек</p>
+                        )}
                       </div>
                     </div>
                   </button>
+                  
+                  {/* Ethereum */}
                   <button
                     onClick={() => handleMint('eth')}
                     disabled={isMinting}
@@ -236,9 +250,9 @@ export function CardDetailsModal({
                       <div className="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center">
                         <Coins className="w-5 h-5 text-white" />
                       </div>
-                      <div>
+                      <div className="flex-1">
                         <p className="text-white font-medium">Ethereum</p>
-                        <p className="text-xs text-gray-400">Mint на ETH кошелёк</p>
+                        <p className="text-xs text-gray-400">MetaMask скоро будет добавлен</p>
                       </div>
                     </div>
                   </button>

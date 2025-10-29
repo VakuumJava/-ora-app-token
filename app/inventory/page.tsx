@@ -213,12 +213,15 @@ export default function InventoryPage() {
   const handleTransfer = async (username: string) => {
     if (!selectedCard) return
 
+    const session = getUserSession()
+
     const response = await fetch('/api/transfer', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         cardId: selectedCard.id,
-        recipientUsername: username
+        recipientUsername: username,
+        userId: session.userId
       })
     })
 
@@ -236,15 +239,17 @@ export default function InventoryPage() {
 
   // Обработчик минта NFT
   const handleMint = async (chain: 'ton' | 'eth') => {
-    // Проверяем наличие подключенного кошелька
+    if (!selectedCard) return
+
     if (chain === 'ton') {
-      // TODO: Проверить подключение TonConnect
-      alert('Функция минта на TON будет доступна после подключения кошелька')
-      throw new Error('TON wallet not connected')
+      // Для TON минта потребуется интеграция с TonConnect
+      // Пока просто показываем сообщение что функция в разработке
+      alert('🚧 Минт NFT на TON в разработке. Скоро будет доступен!')
+      return
     } else {
-      // TODO: Проверить подключение Web3/MetaMask
-      alert('Функция минта на Ethereum будет доступна после подключения кошелька')
-      throw new Error('ETH wallet not connected')
+      // Ethereum минт тоже в разработке
+      alert('🚧 Минт NFT на Ethereum в разработке. Скоро будет доступен!')
+      return
     }
   }
 

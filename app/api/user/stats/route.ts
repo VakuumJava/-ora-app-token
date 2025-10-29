@@ -1,54 +1,30 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
-import { getCurrentUser } from '@/lib/jwt'
+import { userInventory, userCards } from '@/lib/spawn-storage'
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    // Получаем текущего пользователя
-    const user = await getCurrentUser()
+    // Получаем userId из query параметров
+    const { searchParams } = new URL(request.url)
+    const userId = searchParams.get('userId') || 'demo-user'
 
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Не авторизован' },
-        { status: 401 }
-      )
-    }
+    console.log('📊 Запрос статистики для:', userId)
 
-    // Получаем данные пользователя из базы
-    const userData = await prisma.user.findUnique({
-      where: { id: user.userId },
-      select: {
-        id: true,
-        createdAt: true,
-        totalShards: true,
-        totalCards: true,
-      }
-    })
-
-    if (!userData) {
-      return NextResponse.json(
-        { error: 'Пользователь не найден' },
-        { status: 404 }
-      )
-    }
-
-    // Вычисляем количество дней на сайте
-    const now = new Date()
-    const createdAt = new Date(userData.createdAt)
-    const daysOnSite = Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24))
+    // Подсчитываем статистику из in-memory хранилища
+    const userShards = userInventory.filter(item => item.userId === userId)
+    const userNFTCards = userCards.filter(item => item.userId === userId)
 
     // Возвращаем статистику
     return NextResponse.json({
-      daysOnSite,
-      shardsFound: userData.totalShards || 0,
-      cardsOwned: userData.totalCards || 0,
+      totalShards: userShards.length,
+      totalCards: userNFTCards.length,
+      daysOnSite: 0, // Пока не отслеживаем
+      shardsFound: userShards.length,
+      cardsOwned: userNFTCards.length,
     })
-
-  } catch (error: any) {
-    console.error('Ошибка получения статистики:', error)
-
+  } catch (error) {
+    console.error('Error fetching user stats:', error)
     return NextResponse.json(
-      { error: 'Ошибка сервера' },
+      { error: 'Ошибка получения статистики' },
       { status: 500 }
     )
   }

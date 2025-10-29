@@ -359,11 +359,7 @@ export default function MapPage() {
               
               setSelectedFragment(null)
               
-              // Перезагружаем точки спавна
-              fetch('/api/spawn-points')
-                .then(res => res.json())
-                .then(data => setSpawnPoints(data))
-                .catch(console.error)
+              // Не нужно перезагружать spawn points! Они фильтруются на клиенте через collectedSpawnIds
             }}
           />
         )}

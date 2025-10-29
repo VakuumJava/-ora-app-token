@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Calendar, Gem, CreditCard, User, Trash2, Mail, UserCircle, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { getUserSession } from '@/lib/user-session'
 
 interface UserStats {
   daysOnSite: number
@@ -30,6 +31,10 @@ export default function ProfilePage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Получаем текущего пользователя из сессии
+        const session = getUserSession()
+        console.log('👤 Профиль пользователя:', session.userId)
+
         // Получаем данные пользователя
         const userResponse = await fetch('/api/auth/me')
         if (userResponse.status === 401) {
@@ -41,11 +46,12 @@ export default function ProfilePage() {
           setUser(userData.user)
         }
 
-        // Получаем статистику
-        const statsResponse = await fetch('/api/user/stats')
+        // Получаем статистику с userId
+        const statsResponse = await fetch(`/api/user/stats?userId=${session.userId}`)
         if (statsResponse.ok) {
           const statsData = await statsResponse.json()
           setStats(statsData)
+          console.log('📊 Статистика загружена:', statsData)
         } else {
           setError('Ошибка загрузки статистики')
         }
