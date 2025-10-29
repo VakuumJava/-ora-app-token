@@ -328,7 +328,6 @@ ROYALTY_RECIPIENT=0x... # or EQ... for TON
 ```
 
 
-### Test TON Mint (Testnet First)
 
 1. Set TON testnet in TonConnect
 2. Get test TON from faucet
