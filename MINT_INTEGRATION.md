@@ -359,7 +359,7 @@ ROYALTY_RECIPIENT=0x... # or EQ... for TON
 - [ ] Use environment variables for addresses
 - [ ] Never expose private keys in frontend
 
-## Error Handling
+
 
 Common errors and solutions:
 
