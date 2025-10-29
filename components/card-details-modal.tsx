@@ -15,6 +15,7 @@ interface CardDetailsModalProps {
     rarity: string
     craftedAt: Date
     owner?: string
+    userId?: string // UUID пользователя
     model?: string
     background?: string
   }
@@ -77,19 +78,21 @@ export function CardDetailsModal({
 
     try {
       if (chain === 'ton') {
-        // Получаем реальный userId из localStorage (автологин)
-        const savedUserId = localStorage.getItem('qora_autologin_userId')
+        // Получаем userId из карточки или localStorage
+        const userId = card.userId || localStorage.getItem('qora_autologin_userId')
         
-        if (!savedUserId) {
+        if (!userId) {
           throw new Error('Пользователь не авторизован. Войдите в систему.')
         }
+        
+        console.log('🎨 Минт карточки:', { userId, cardId: card.id, walletAddress: tonAddress })
         
         // Реальный TON минт через TonConnect
         const response = await fetch('/api/mint/ton', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            userId: savedUserId, // UUID пользователя
+            userId: userId, // UUID пользователя
             cardId: card.id,
             walletAddress: tonAddress,
           })

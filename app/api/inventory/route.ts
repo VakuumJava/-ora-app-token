@@ -80,7 +80,8 @@ export async function GET(request: Request) {
           craftedAt: uc.assembledAt,
           mintedAt: uc.assembledAt,
           tokenId: uc.tokenId,
-          owner: user.nickname
+          owner: user.nickname,
+          userId: user.id // Добавляем userId для минта
         }))
       }
     })
