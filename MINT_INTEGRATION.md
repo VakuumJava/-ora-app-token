@@ -327,7 +327,6 @@ NEXT_PUBLIC_COLLECTION_URI=https://qora.app/api/collection-metadata
 ROYALTY_RECIPIENT=0x... # or EQ... for TON
 ```
 
-## Step 5: Testing
 
 ### Test TON Mint (Testnet First)
 
