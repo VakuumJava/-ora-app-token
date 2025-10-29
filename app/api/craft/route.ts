@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { userInventory, userCards, shardInfo, cardInfo, cardModels, cardBackgrounds, userProfiles } from '@/lib/spawn-storage'
+import { userInventory, userCards, shardInfo, cardInfo, cardModels, cardBackgrounds, userProfiles, saveAllData } from '@/lib/spawn-storage'
 
 /**
  * POST /api/craft - Скрафтить NFT карту из 3 осколков
@@ -127,6 +127,9 @@ export async function POST(request: NextRequest) {
     console.log('📊 Статистика:')
     console.log('  - Осколков осталось:', userInventory.filter(i => i.userId === userId).length)
     console.log('  - Карт собрано:', userCards.filter(c => c.userId === userId).length)
+    
+    // Сохраняем данные в файл
+    saveAllData()
     
     return NextResponse.json({
       success: true,

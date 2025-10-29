@@ -242,14 +242,39 @@ export default function InventoryPage() {
     if (!selectedCard) return
 
     if (chain === 'ton') {
-      // Для TON минта потребуется интеграция с TonConnect
-      // Пока просто показываем сообщение что функция в разработке
-      alert('🚧 Минт NFT на TON в разработке. Скоро будет доступен!')
-      return
+      try {
+        // Простой mock-минт для TON
+        const session = getUserSession()
+        
+        // Имитируем минт (в реальности здесь будет вызов смарт-контракта)
+        const mintResponse = await fetch('/api/mint/mock', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            cardId: selectedCard.id,
+            userId: session.userId,
+            chain: 'ton'
+          })
+        })
+
+        const data = await mintResponse.json()
+
+        if (!mintResponse.ok) {
+          throw new Error(data.message || 'Ошибка минта')
+        }
+
+        alert(`✅ ${data.message}\n\nToken ID: ${data.tokenId}\n\n⚠️ Это тестовый минт. Реальный blockchain минт будет добавлен позже.`)
+        
+        // Обновляем инвентарь
+        handleCraftSuccess()
+      } catch (err: any) {
+        alert(`❌ Ошибка минта: ${err.message}`)
+        throw err
+      }
     } else {
       // Ethereum минт тоже в разработке
       alert('🚧 Минт NFT на Ethereum в разработке. Скоро будет доступен!')
-      return
+      throw new Error('ETH wallet not connected')
     }
   }
 

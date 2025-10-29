@@ -1,6 +1,15 @@
+import { loadPersistedData, savePersistedData, startAutoSave, type PersistedData } from './file-persistence'
+
 // Глобальное хранилище точек спавна (серверное)
 // Данные хранятся в памяти сервера и синхронизируются с клиентом через API
 export const tempSpawnPoints: any[] = []
+
+// Загружаем данные из файла при старте сервера
+const persistedData = loadPersistedData()
+if (persistedData) {
+  tempSpawnPoints.push(...persistedData.spawnPoints)
+  console.log('📦 Загружено spawn points:', tempSpawnPoints.length)
+}
 
 // Соответствие между ID осколков и лейблами
 export const shardMapping: Record<string, string> = {
@@ -56,6 +65,13 @@ export interface CollectedShard {
 }
 
 export const userInventory: CollectedShard[] = []
+if (persistedData) {
+  userInventory.push(...persistedData.userInventory.map((s: any) => ({
+    ...s,
+    collectedAt: new Date(s.collectedAt)
+  })))
+  console.log('📦 Загружено осколков:', userInventory.length)
+}
 
 // Хранилище собранных NFT карт
 export interface CollectedCard {
@@ -69,9 +85,20 @@ export interface CollectedCard {
   mintedOn?: 'ton' | 'ethereum' // На какой сети заминчено
   txHash?: string // Хеш транзакции минта
   tokenId?: string // ID токена в блокчейне
+  mintedAt?: Date // Дата минта
+  chain?: string // Цепь (ton/eth)
+  owner?: string // Username владельца
 }
 
 export const userCards: CollectedCard[] = []
+if (persistedData) {
+  userCards.push(...persistedData.userCards.map((c: any) => ({
+    ...c,
+    craftedAt: new Date(c.craftedAt),
+    mintedAt: c.mintedAt ? new Date(c.mintedAt) : undefined
+  })))
+  console.log('🎴 Загружено карт:', userCards.length)
+}
 
 // Система пользователей
 export interface UserProfile {
@@ -83,7 +110,44 @@ export interface UserProfile {
 }
 
 export const userProfiles: UserProfile[] = []
+if (persistedData) {
+  userProfiles.push(...persistedData.userProfiles.map((p: any) => ({
+    ...p,
+    createdAt: new Date(p.createdAt)
+  })))
+  console.log('👤 Загружено пользователей:', userProfiles.length)
+}
 
 // Рандомные модели и фоны для карт
 export const cardModels = ["Hellfire", "Frostbite", "Shadow", "Celestial", "Inferno"]
 export const cardBackgrounds = ["Neon Blue", "Dark Purple", "Golden Sunset", "Mystic Green", "Blood Red"]
+
+/**
+ * Сохраняет все данные в файл
+ */
+export function saveAllData() {
+  const data: PersistedData = {
+    spawnPoints: tempSpawnPoints,
+    userInventory,
+    userCards,
+    userProfiles,
+    lastSaved: new Date().toISOString()
+  }
+  return savePersistedData(data)
+}
+
+/**
+ * Запускает автосохранение каждые 5 минут
+ */
+if (typeof window === 'undefined') {
+  // Только на сервере
+  startAutoSave(() => ({
+    spawnPoints: tempSpawnPoints,
+    userInventory,
+    userCards,
+    userProfiles,
+    lastSaved: new Date().toISOString()
+  }), 5)
+  
+  console.log('✅ Система персистентности запущена')
+}
