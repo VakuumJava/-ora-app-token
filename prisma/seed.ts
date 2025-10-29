@@ -77,6 +77,12 @@ async function main() {
     console.log(`✅ Card created: ${card.name} (${card.rarity})`)
 
     // Создаём 3 осколка для каждой карточки
+    const shardImages = {
+      'A': '/elements/shard-1.png',
+      'B': '/elements/shard-2.png',
+      'C': '/elements/shard-3.png',
+    }
+
     for (const label of ['A', 'B', 'C']) {
       await prisma.shard.upsert({
         where: {
@@ -85,11 +91,13 @@ async function main() {
             label,
           },
         },
-        update: {},
+        update: {
+          imageUrl: shardImages[label as 'A' | 'B' | 'C'],
+        },
         create: {
           cardId: card.id,
           label,
-          imageUrl: cardData.imageUrl,
+          imageUrl: shardImages[label as 'A' | 'B' | 'C'],
         },
       })
     }
