@@ -387,7 +387,7 @@ After integration:
 8. Add floor price tracking
 9. Create leaderboard for collectors
 
-## Support Resources
+
 
 - [TonConnect Documentation](https://docs.ton.org/develop/dapps/ton-connect)
 - [MetaMask Documentation](https://docs.metamask.io/)
