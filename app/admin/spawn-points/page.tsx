@@ -21,6 +21,7 @@ interface Shard {
   id: string
   label: Fragment
   imageUrl: string
+  displayName?: string
 }
 
 interface SpawnPoint {
@@ -40,18 +41,35 @@ export default function AdminSpawnPointsPage() {
   const [clickLocation, setClickLocation] = useState<[number, number] | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [spawnPoints, setSpawnPoints] = useState<SpawnPoint[]>([])
+  const [shards, setShards] = useState<Shard[]>([])
   const [isLoading, setIsLoading] = useState(true)
-
-  // Жестко закодированные 3 осколка
-  const shards: Shard[] = [
-    { id: "shard-1", label: "A", imageUrl: "/elements/shard-1.png" },
-    { id: "shard-2", label: "B", imageUrl: "/elements/shard-2.png" },
-    { id: "shard-3", label: "C", imageUrl: "/elements/shard-3.png" },
-  ]
+  const [isLoadingShards, setIsLoadingShards] = useState(true)
 
   useEffect(() => {
     loadSpawnPoints()
+    loadShards()
   }, [])
+
+  const loadShards = async () => {
+    try {
+      const response = await fetch('/api/admin/shards')
+      if (response.ok) {
+        const data = await response.json()
+        // Преобразуем в формат Shard с displayName
+        const formattedShards = data.shards.map((s: any) => ({
+          id: s.id,
+          label: s.label,
+          imageUrl: s.cardImage || `/elements/shard-${s.label === 'A' ? '1' : s.label === 'B' ? '2' : '3'}.png`,
+          displayName: s.displayName
+        }))
+        setShards(formattedShards)
+      }
+    } catch (error) {
+      console.error('Error loading shards:', error)
+    } finally {
+      setIsLoadingShards(false)
+    }
+  }
 
   const loadSpawnPoints = async () => {
     try {
@@ -149,12 +167,22 @@ export default function AdminSpawnPointsPage() {
             <label className="block text-sm font-medium text-gray-300 mb-3">
               Выберите осколок
             </label>
-            <div className="grid grid-cols-3 gap-3">
-              {shards.map(shard => (
-                <button
-                  key={shard.id}
-                  onClick={() => setSelectedShard(shard)}
-                  className={`relative p-4 rounded-lg border-2 transition-all hover:scale-105 ${
+            {isLoadingShards ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
+                <span className="ml-2 text-gray-400">Загрузка осколков...</span>
+              </div>
+            ) : shards.length === 0 ? (
+              <div className="text-center py-8 text-gray-400">
+                Нет доступных осколков. Запустите seed: npx tsx prisma/seed.ts
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-3">
+                {shards.map(shard => (
+                  <button
+                    key={shard.id}
+                    onClick={() => setSelectedShard(shard)}
+                    className={`relative p-4 rounded-lg border-2 transition-all hover:scale-105 ${
                     selectedShard?.id === shard.id
                       ? 'border-blue-500 bg-blue-500/20'
                       : 'border-white/10 bg-white/5 hover:border-blue-500/50'
@@ -166,7 +194,7 @@ export default function AdminSpawnPointsPage() {
                     className="w-full h-16 object-contain"
                   />
                   <div className="text-xs text-gray-300 text-center mt-2">
-                    Осколок {shard.label}
+                    {shard.displayName || `Осколок ${shard.label}`}
                   </div>
                   {selectedShard?.id === shard.id && (
                     <div className="absolute top-2 right-2 w-3 h-3 bg-blue-500 rounded-full" />
@@ -174,6 +202,7 @@ export default function AdminSpawnPointsPage() {
                 </button>
               ))}
             </div>
+            )}
           </div>
 
           {/* Радиус */}
