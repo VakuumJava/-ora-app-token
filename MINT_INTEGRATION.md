@@ -323,7 +323,6 @@ NEXT_PUBLIC_ETH_CONTRACT_ADDRESS=0x...
 NEXT_PUBLIC_METADATA_BASE_URI=https://qora.app/api/nft/
 NEXT_PUBLIC_COLLECTION_URI=https://qora.app/api/collection-metadata
 
-# Royalties
 ROYALTY_RECIPIENT=0x... # or EQ... for TON
 ```
 
