@@ -102,23 +102,23 @@ export async function POST(request: Request) {
         }
 
         // Generate metadata URI
-        const metadataUri = `https://qora.app/api/nft/ton/${cardId}`;
+        const metadataUri = `https://qora.store/api/nft/ton/${cardId}`;
 
-        // Build mint message body
-        // TEP-62: op::mint (1), query_id, item_index, amount, nft_content
+        // Build mint message body for standard NFT collection
+        // TEP-62/TEP-64 format: op (1), query_id, item_index, amount, content_cell
+        const nftContentCell = beginCell()
+            .storeBuffer(Buffer.from(metadataUri))
+            .endCell();
+
         const mintBody = beginCell()
-            .storeUint(TON_OPERATIONS.MINT, 32) // op
-            .storeUint(Date.now(), 64) // query_id
-            .storeUint(0, 64) // item_index (will be auto-assigned by collection)
-            .storeCoins(toNano('0.05')) // amount for NFT item
+            .storeUint(1, 32) // op::mint_nft = 1
+            .storeUint(0, 64) // query_id
+            .storeUint(0, 64) // item_index (auto-assigned by collection)
+            .storeCoins(toNano('0.05')) // amount to forward to NFT item
             .storeRef(
                 beginCell()
-                    .storeAddress(tonAddress) // owner_address
-                    .storeRef(
-                        beginCell()
-                            .storeBuffer(Buffer.from(metadataUri))
-                            .endCell()
-                    )
+                    .storeAddress(tonAddress) // new_owner_address
+                    .storeRef(nftContentCell) // nft_content
                     .endCell()
             )
             .endCell();
