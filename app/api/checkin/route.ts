@@ -2,16 +2,18 @@ import { NextRequest, NextResponse } from 'next/server'
 import { calculateDistance } from '@/lib/geo-utils'
 import { collectShard, getOrCreateUser } from '@/lib/db-storage'
 import { prisma } from '@/lib/db'
+import { logger } from '@/lib/logger'
 
 /**
  * POST /api/checkin - Собрать осколок с точки спавна
+ * Body: { spawnPointId, userLat, userLng, userId }
  */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const { spawnPointId, userLat, userLng, userId: userNickname } = body
 
-    console.log('📍 Checkin request:', { spawnPointId, userLat, userLng, userNickname })
+    logger.debug('Checkin request received', { spawnPointId, userLat, userLng, userNickname })
 
     if (!spawnPointId || !userLat || !userLng || !userNickname) {
       return NextResponse.json({
@@ -73,7 +75,7 @@ export async function POST(request: NextRequest) {
       spawnPoint.longitude
     )
 
-    console.log(`📏 Расстояние: ${distance.toFixed(2)}м, требуется: ${spawnPoint.radius}м`)
+    
 
     if (distance > spawnPoint.radius) {
       return NextResponse.json({
@@ -85,7 +87,7 @@ export async function POST(request: NextRequest) {
     // Собираем осколок
     const userShard = await collectShard(user.id, spawnPoint.shardId)
 
-    console.log('✅ Осколок собран:', userShard.id)
+    
 
     return NextResponse.json({
       success: true,

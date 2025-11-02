@@ -12,7 +12,7 @@ export async function DELETE(request: NextRequest) {
     const token = request.cookies.get('access_token')?.value || 
                   request.cookies.get('accessToken')?.value
 
-    console.log('🔐 Delete account attempt:', { 
+    
       hasToken: !!token,
       cookies: request.cookies.getAll().map(c => c.name)
     })
@@ -24,11 +24,11 @@ export async function DELETE(request: NextRequest) {
     // Проверяем токен
     const payload = verifyAccessToken(token)
     if (!payload) {
-      console.log('❌ Invalid token')
+      
       return NextResponse.json({ error: 'Невалидный токен' }, { status: 401 })
     }
 
-    console.log('⚠️ Deleting account:', { userId: payload.userId, email: payload.email })
+    
 
     const userId = payload.userId
 
@@ -66,7 +66,7 @@ export async function DELETE(request: NextRequest) {
     response.cookies.delete('accessToken')
     response.cookies.delete('refreshToken')
 
-    console.log('✅ Account deleted successfully:', { userId })
+    
 
     return response
   } catch (error) {

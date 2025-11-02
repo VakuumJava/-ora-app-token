@@ -205,7 +205,7 @@ export async function deleteCardAfterMint(userCardId: string, tokenId: string, t
     where: { id: userCardId }
   })
 
-  console.log(`🗑️ Карта ${userCardId} удалена после минта (tokenId: ${tokenId})`)
+  
 }
 
 /**
@@ -226,7 +226,7 @@ export async function getOrCreateUser(nickname: string) {
         totalCards: 0
       }
     })
-    console.log('🆕 Создан новый пользователь:', nickname)
+    
   }
 
   return user

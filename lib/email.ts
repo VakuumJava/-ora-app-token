@@ -17,7 +17,7 @@ export function getVerificationUrl(token: string): string {
   const baseUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
   const verificationUrl = `${baseUrl}/api/auth/verify-email?token=${token}`
   
-  console.log('🔗 Generated verification URL:', { 
+  
     baseUrl, 
     token: `${token.substring(0, 10)}...`,
     fullUrl: verificationUrl 
@@ -114,7 +114,7 @@ export async function sendVerificationEmail(email: string, token: string) {
       `,
     })
     
-    console.log(`✅ Verification email sent to ${email}`)
+    
     return { success: true, message: 'Verification email sent' }
   } catch (error) {
     console.error('❌ Failed to send verification email:', error)

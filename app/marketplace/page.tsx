@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { SiteHeader } from "@/components/site-header"
+import { DotLottiePlayer } from "@/components/dotlottie-player"
 import { Search, Filter, ShoppingCart } from "lucide-react"
 import { authService } from "@/lib/auth"
 
@@ -333,20 +334,9 @@ export default function MarketplacePage() {
           </div>
         ) : (
           <div className="py-24 text-center">
-            <div 
+            <DotLottiePlayer 
+              src="/MarketNothing.json"
               className="w-48 h-48 mx-auto mb-6"
-              dangerouslySetInnerHTML={{
-                __html: `
-                  <dotlottie-player
-                    src="/MarketNothing.json"
-                    background="transparent"
-                    speed="1"
-                    style="width: 100%; height: 100%;"
-                    loop
-                    autoplay
-                  ></dotlottie-player>
-                `
-              }}
             />
             <h3 className="mb-3 text-2xl font-bold text-white">
               {error ? 'Ошибка загрузки' : 'Ничего не найдено'}

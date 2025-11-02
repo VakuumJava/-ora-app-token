@@ -7,6 +7,7 @@ import { CosmicBackground } from "@/components/cosmic-background"
 import { ParticlesBackground } from "@/components/particles-background"
 import { CraftModal } from "@/components/craft-modal"
 import { CardDetailsModal } from "@/components/card-details-modal"
+import { DotLottiePlayer } from "@/components/dotlottie-player"
 import { X, Loader2, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { getUserSession } from "@/lib/user-session"
@@ -119,7 +120,7 @@ export default function InventoryPage() {
         
         // Получаем текущую сессию пользователя
         const session = getUserSession()
-        console.log('👤 Текущий пользователь:', session.userId)
+        
 
         // Загружаем инвентарь с userId
         const inventoryResponse = await fetch(`/api/inventory?userId=${session.userId}`)
@@ -129,7 +130,7 @@ export default function InventoryPage() {
         }
 
         const inventoryData = await inventoryResponse.json()
-        console.log('📦 Инвентарь загружен:', inventoryData)
+        
         setInventory(inventoryData)
       } catch (err) {
         console.error('Error fetching data:', err)
@@ -182,9 +183,9 @@ export default function InventoryPage() {
     }))
     .filter(tier => tier.count > 0) // Показываем только редкости с предметами
 
-  console.log('📊 Редкости с предметами:', rarityTiers)
-  console.log('📦 Всего фрагментов:', inventory?.fragments.total)
-  console.log('🎴 Всего карт:', inventory?.cards.total)
+  
+  
+  
 
   const selectedItems = selectedRarity 
     ? [
@@ -205,12 +206,12 @@ export default function InventoryPage() {
     fetch(`/api/inventory?userId=${session.userId}`)
       .then(res => res.json())
       .then(data => {
-        console.log('📦 Инвентарь перезагружен после крафта/минта:', data)
+        
         setInventory(data)
         // Закрываем модалку если она открыта
         setSelectedCard(null)
       })
-      .catch(console.error)
+      .catch(err => logger.error("Error", {}, err))
   }
 
   // Обработчик передачи карты
@@ -468,21 +469,9 @@ export default function InventoryPage() {
         <section className="py-32 relative z-10 px-6">
           <div className="max-w-2xl mx-auto text-center">
             <div className="flex flex-col items-center justify-center">
-              {/* Lottie Animation - используем JSON версию */}
-              <div 
+              <DotLottiePlayer 
+                src="/LootBag.json"
                 className="w-48 h-48 mb-4"
-                dangerouslySetInnerHTML={{
-                  __html: `
-                    <dotlottie-player
-                      src="/LootBag.json"
-                      background="transparent"
-                      speed="1"
-                      style="width: 100%; height: 100%;"
-                      loop
-                      autoplay
-                    ></dotlottie-player>
-                  `
-                }}
               />
               <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white/90">У вас пока нет предметов</h2>
               <p className="text-lg md:text-xl text-gray-500 mb-8">

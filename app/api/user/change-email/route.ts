@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     const token = request.cookies.get('access_token')?.value || 
                   request.cookies.get('accessToken')?.value
 
-    console.log('🔐 Change email attempt:', { 
+    
       hasToken: !!token,
       cookies: request.cookies.getAll().map(c => c.name)
     })
@@ -24,11 +24,11 @@ export async function POST(request: NextRequest) {
 
     const payload = verifyAccessToken(token)
     if (!payload) {
-      console.log('❌ Invalid token')
+      
       return NextResponse.json({ error: 'Невалидный токен' }, { status: 401 })
     }
 
-    console.log('✅ User authenticated:', { userId: payload.userId, email: payload.email })
+    
 
     const { newEmail } = await request.json()
 
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     // Отправка письма на новый email
     try {
       await sendVerificationEmail(newEmail, verificationToken)
-      console.log('✅ Verification email sent to:', newEmail)
+      
     } catch (emailError) {
       console.error('❌ Failed to send verification email:', emailError)
       // Продолжаем выполнение, даже если email не отправился

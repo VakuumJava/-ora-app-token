@@ -18,7 +18,7 @@ export async function POST(request: Request) {
     try {
         const { userId, cardId, walletAddress } = await request.json();
 
-        console.log('🎨 Ethereum Mint request:', { userId, cardId, walletAddress });
+        
 
         // Validation
         if (!userId || !cardId || !walletAddress) {
@@ -101,7 +101,7 @@ export async function POST(request: Request) {
             value: ethers.parseEther('0.01').toString(), // 0.01 ETH mint fee
         };
 
-        console.log('✅ Mint transaction prepared:', {
+        
             contract: contractAddress,
             recipient: walletAddress,
             cardId,
@@ -141,7 +141,7 @@ export async function PUT(request: Request) {
     try {
         const { cardId, txHash, tokenId } = await request.json();
 
-        console.log('✅ Confirming Ethereum mint:', { cardId, txHash, tokenId });
+        
 
         // Validate inputs
         if (!cardId || !txHash) {
@@ -166,8 +166,8 @@ export async function PUT(request: Request) {
         // Delete card from database (it's now in blockchain!)
         await deleteCardAfterMint(cardId, tokenId || null, txHash);
 
-        console.log('🗑️ Карта удалена из базы после минта');
-        console.log('🎉 Card minted on Ethereum:', {
+        
+        
             cardId,
             txHash,
             explorer: `https://etherscan.io/tx/${txHash}`,

@@ -16,7 +16,7 @@ export async function DELETE(
       where: { id }
     })
     
-    console.log('🗑️ Точка спавна удалена:', id)
+    
 
     return NextResponse.json({ success: true, message: 'Spawn point deleted' })
   } catch (error: any) {

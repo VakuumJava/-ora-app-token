@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { cardId, recipientUsername, userId: fromNickname } = body
     
-    console.log('📤 Запрос на передачу:', { cardId, recipientUsername, fromNickname })
+    
     
     if (!cardId || !recipientUsername || !fromNickname) {
       return NextResponse.json({
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     // Передаем карту
     const toUser = await transferCard(cardId, fromUser.id, cleanUsername)
 
-    console.log('✅ Карта передана:', {
+    
       cardId,
       from: fromUser.nickname,
       to: toUser.nickname

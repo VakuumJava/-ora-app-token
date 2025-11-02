@@ -32,7 +32,7 @@ export function WalletConnectModal({ isOpen, onClose }: WalletConnectModalProps)
             setEthereumAddress(accounts[0])
           }
         })
-        .catch(console.error)
+        .catch(err => logger.error("Error", {}, err))
     }
   }, [isOpen])
 

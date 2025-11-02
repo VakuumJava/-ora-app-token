@@ -1,0 +1,20 @@
+{
+  "name": "qora-ton-contracts",
+  "version": "1.0.0",
+  "description": "TON NFT Collection contracts for Qora",
+  "scripts": {
+    "deploy:mainnet": "ts-node deploy-simple.ts",
+    "deploy:collection": "ts-node deploy-collection.ts"
+  },
+  "dependencies": {
+    "@ton/core": "^0.56.0",
+    "@ton/crypto": "^3.2.0",
+    "@ton/ton": "^13.11.0",
+    "dotenv": "^16.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.0"
+  }
+}

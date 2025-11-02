@@ -26,7 +26,7 @@ export function AutoLogin() {
     const savedUsername = localStorage.getItem('qora_autologin_username')
 
     if (savedUserId && savedUsername) {
-      console.log('🔐 Автологин: Найдена сохранённая сессия', savedUserId)
+      
       
       // Проверяем валидность сессии на сервере
       fetch('/api/auth/verify-session', {
@@ -37,10 +37,10 @@ export function AutoLogin() {
         .then(res => res.json())
         .then(data => {
           if (data.valid) {
-            console.log('✅ Автологин: Сессия валидна')
+            
             // Сессия валидна, ничего не делаем
           } else {
-            console.log('❌ Автологин: Сессия истекла, перенаправляем на логин')
+            
             localStorage.removeItem('qora_autologin_userId')
             localStorage.removeItem('qora_autologin_username')
             
@@ -54,12 +54,12 @@ export function AutoLogin() {
           console.error('Ошибка проверки сессии:', err)
         })
     } else {
-      console.log('ℹ️ Автологин: Сохранённая сессия не найдена')
+      
       
       // Если пользователь пытается зайти на защищённые страницы без логина
       const protectedPages = ['/inventory', '/profile', '/admin', '/marketplace']
       if (protectedPages.some(page => pathname.startsWith(page))) {
-        console.log('🔒 Перенаправление на логин (защищённая страница)')
+        
         router.push('/login')
       }
     }

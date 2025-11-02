@@ -80,7 +80,7 @@ export default function MapPage() {
     // Загружаем собранные точки спавна из client-storage
     const collected = getCollectedSpawnIds(session.userId)
     setCollectedSpawnIds(collected)
-    console.log('🗺️ Собранные точки пользователя:', collected)
+    
   }, [])
 
   // Загружаем точки спавна из API
@@ -114,7 +114,7 @@ export default function MapPage() {
     // Запрашиваем геолокацию с увеличенным таймаутом
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        console.log("Геолокация получена:", position.coords)
+        
         setUserLocation([position.coords.latitude, position.coords.longitude])
         setHasGeolocation(true)
         setIsCheckingLocation(false)
@@ -154,7 +154,7 @@ export default function MapPage() {
     
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        console.log("Геолокация получена:", position.coords)
+        
         setUserLocation([position.coords.latitude, position.coords.longitude])
         setHasGeolocation(true)
         setIsCheckingLocation(false)
@@ -354,7 +354,7 @@ export default function MapPage() {
                 // Обновляем состояние для немедленного удаления с карты
                 setCollectedSpawnIds(prev => [...prev, selectedFragment.id])
                 
-                console.log('✅ Точка собрана и сохранена:', selectedFragment.id)
+                
               }
               
               setSelectedFragment(null)

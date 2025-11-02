@@ -61,7 +61,7 @@ export function getUserSession(): UserSession {
   // Добавляем пользователя в userProfiles
   ensureUserInProfiles(newSession);
   
-  console.log('🆕 Created new user session:', newSession);
+  
   
   return newSession;
 }
@@ -94,7 +94,7 @@ function ensureUserInProfiles(session: UserSession) {
     });
     
     localStorage.setItem('qora_user_profiles', JSON.stringify(profiles));
-    console.log('👤 Added user to profiles:', session.username);
+    
   }
 }
 
@@ -109,7 +109,7 @@ export function updateUserSession(updates: Partial<UserSession>) {
   
   localStorage.setItem(USER_SESSION_KEY, JSON.stringify(updated));
   
-  console.log('🔄 Updated user session:', updated);
+  
 }
 
 /**
@@ -119,7 +119,7 @@ export function clearUserSession() {
   if (typeof window === 'undefined') return;
   
   localStorage.removeItem(USER_SESSION_KEY);
-  console.log('🔓 Cleared user session');
+  
 }
 
 /**

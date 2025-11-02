@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { shardIds, userId: userNickname } = body
 
-    console.log('🎨 Craft request:', { shardIds, userNickname })
+    
 
     if (!shardIds || !Array.isArray(shardIds) || shardIds.length !== 3) {
       return NextResponse.json({
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     // Крафтим карту
     const userCard = await craftCard(user.id, shardIds)
 
-    console.log('🎉 NFT карта создана:', userCard.id)
+    
 
     return NextResponse.json({
       success: true,

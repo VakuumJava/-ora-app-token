@@ -76,7 +76,7 @@ export default function CheckInPage() {
         const dist = calculateDistance(newLocation.lat, newLocation.lng, fragment.lat, fragment.lng)
         setDistance(dist)
 
-        console.log("[v0] Location updated:", {
+        
           userLat: newLocation.lat,
           userLng: newLocation.lng,
           accuracy: newLocation.accuracy,
@@ -126,7 +126,7 @@ export default function CheckInPage() {
       return
     }
 
-    console.log("[v0] Starting check-in hold timer")
+    
     setIsChecking(true)
     setCheckInStatus("holding")
     setHoldProgress(0)
@@ -148,7 +148,7 @@ export default function CheckInPage() {
 
   // Cancel check-in
   const cancelCheckIn = () => {
-    console.log("[v0] Check-in cancelled")
+    
     if (holdTimerRef.current) {
       clearTimeout(holdTimerRef.current)
     }
@@ -162,7 +162,7 @@ export default function CheckInPage() {
 
   // Complete check-in
   const completeCheckIn = () => {
-    console.log("[v0] Check-in completed successfully")
+    
     if (progressIntervalRef.current) {
       clearInterval(progressIntervalRef.current)
     }

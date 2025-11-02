@@ -6,7 +6,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const userNickname = searchParams.get('userId') || 'demo-user'
 
-    console.log('📊 Запрос статистики для:', userNickname)
+    
 
     // Получаем пользователя
     const user = await getOrCreateUser(userNickname)

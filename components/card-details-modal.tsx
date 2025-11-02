@@ -85,7 +85,7 @@ export function CardDetailsModal({
           throw new Error('Пользователь не авторизован. Войдите в систему.')
         }
         
-        console.log('🎨 Минт карточки:', { userId, cardId: card.id, walletAddress: tonAddress })
+        
         
         // Реальный TON минт через TonConnect
         const response = await fetch('/api/mint/ton', {
@@ -105,10 +105,10 @@ export function CardDetailsModal({
         }
 
         // Отправляем транзакцию через TonConnect
-        console.log('📤 Отправка TON транзакции:', data.transaction)
+        
         const result = await tonConnectUI.sendTransaction(data.transaction)
         
-        console.log('✅ Транзакция отправлена:', result)
+        
 
         // Подтверждаем минт на сервере
         const confirmResponse = await fetch('/api/mint/ton', {

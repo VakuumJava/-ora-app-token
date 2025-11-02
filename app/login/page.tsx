@@ -73,7 +73,7 @@ function LoginForm() {
       if (data.user && data.user.id) {
         localStorage.setItem('qora_autologin_userId', data.user.id)
         localStorage.setItem('qora_autologin_username', data.user.nickname || data.user.email)
-        console.log('💾 Автологин сохранён:', data.user.id)
+        
       }
       
       router.push("/")

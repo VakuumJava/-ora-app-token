@@ -117,17 +117,17 @@ export default function MapComponent({ setSelectedFragment, spawnPoints, isLoadi
     if (navigator.geolocation) {
       const watchId = navigator.geolocation.watchPosition(
         (position) => {
-          console.log("Позиция обновлена:", position.coords.latitude, position.coords.longitude)
+          
           setUserLocation([position.coords.latitude, position.coords.longitude])
         },
         (error) => {
-          console.log("Геолокация недоступна:", error)
+          
           // Пробуем получить хотя бы одноразово
           navigator.geolocation.getCurrentPosition(
             (position) => {
               setUserLocation([position.coords.latitude, position.coords.longitude])
             },
-            (err) => console.log("Не удалось получить геолокацию:", err),
+            (err) => 
             { 
               enableHighAccuracy: false,
               timeout: 15000,

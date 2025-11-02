@@ -33,7 +33,7 @@ export default function ProfilePage() {
       try {
         // Получаем текущего пользователя из сессии
         const session = getUserSession()
-        console.log('👤 Профиль пользователя:', session.userId)
+        
 
         // Получаем данные пользователя
         const userResponse = await fetch('/api/auth/me')
@@ -51,7 +51,7 @@ export default function ProfilePage() {
         if (statsResponse.ok) {
           const statsData = await statsResponse.json()
           setStats(statsData)
-          console.log('📊 Статистика загружена:', statsData)
+          
         } else {
           setError('Ошибка загрузки статистики')
         }

@@ -8,33 +8,33 @@ import { prisma } from '@/lib/db'
  */
 export async function POST(request: NextRequest) {
   try {
-    console.log('🗑️  Начинаем очистку базы данных...')
+    
 
     // 1. Удаляем собранные осколки пользователями
     await prisma.userShard.deleteMany({})
-    console.log('✅ UserShards удалены')
+    
 
     // 2. Удаляем созданные карточки пользователями
     await prisma.userCard.deleteMany({})
-    console.log('✅ UserCards удалены')
+    
 
     // 3. Удаляем spawn points
     await prisma.spawnPoint.deleteMany({})
-    console.log('✅ SpawnPoints удалены')
+    
 
     // 4. Удаляем осколки
     await prisma.shard.deleteMany({})
-    console.log('✅ Shards удалены')
+    
 
     // 5. Удаляем карточки
     await prisma.card.deleteMany({})
-    console.log('✅ Cards удалены')
+    
 
     // 6. Удаляем коллекции
     await prisma.collection.deleteMany({})
-    console.log('✅ Collections удалены')
+    
 
-    console.log('🌱 Создаём новые данные...')
+    
 
     // Создаём коллекцию
     const collection = await prisma.collection.create({
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    console.log('✨ База данных успешно очищена и пересоздана!')
+    
 
     return NextResponse.json({
       success: true,

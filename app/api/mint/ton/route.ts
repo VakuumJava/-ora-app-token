@@ -31,7 +31,7 @@ export async function POST(request: Request) {
     try {
         const { userId, cardId, walletAddress } = await request.json();
 
-        console.log('🎨 TON Mint request:', { userId, cardId, walletAddress });
+        
 
         // Validation
         if (!userId || !cardId || !walletAddress) {
@@ -135,7 +135,7 @@ export async function POST(request: Request) {
             ]
         };
 
-        console.log('✅ Mint transaction prepared:', {
+        
             collection: collectionAddress,
             recipient: walletAddress,
             cardId,
@@ -175,7 +175,7 @@ export async function PUT(request: Request) {
     try {
         const { cardId, txHash, tokenId } = await request.json();
 
-        console.log('✅ Confirming TON mint:', { cardId, txHash, tokenId });
+        
 
         // Validate inputs
         if (!cardId || !txHash) {
@@ -200,8 +200,8 @@ export async function PUT(request: Request) {
         // Delete card from database (it's now in blockchain!)
         await deleteCardAfterMint(cardId, tokenId || null, txHash);
         
-        console.log('🗑️ Карта удалена из базы после минта');
-        console.log('🎉 Card minted on TON:', {
+        
+        
             cardId,
             txHash,
             explorer: `https://tonscan.org/tx/${txHash}`,

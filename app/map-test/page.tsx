@@ -4,9 +4,9 @@ import { useEffect } from "react"
 
 export default function MapTestPage() {
   useEffect(() => {
-    console.log('🧪 MapTestPage mounted - JavaScript is working!')
-    console.log('📱 User Agent:', navigator.userAgent)
-    console.log('🌐 Window object available:', typeof window !== 'undefined')
+    
+    
+    
     
     // Test Yandex Maps script loading
     const script = document.createElement('script')
@@ -14,8 +14,8 @@ export default function MapTestPage() {
     script.async = true
     
     script.onload = () => {
-      console.log('✅ Yandex Maps script loaded successfully!')
-      console.log('🗺️ window.ymaps available:', typeof window.ymaps !== 'undefined')
+      
+      
     }
     
     script.onerror = (error) => {
@@ -23,12 +23,12 @@ export default function MapTestPage() {
     }
     
     document.head.appendChild(script)
-    console.log('📌 Script tag added to head')
+    
     
     return () => {
       if (document.head.contains(script)) {
         document.head.removeChild(script)
-        console.log('🧹 Script removed from head')
+        
       }
     }
   }, [])

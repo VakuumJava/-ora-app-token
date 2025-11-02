@@ -8,13 +8,13 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams
     const token = searchParams.get('token')
 
-    console.log('🔍 Email verification attempt:', { 
+    
       token: token ? `${token.substring(0, 10)}...` : 'missing',
       url: request.url 
     })
 
     if (!token) {
-      console.log('❌ No token provided')
+      
       const redirectUrl = getRedirectUrl(request, '/login?error=invalid_token')
       return NextResponse.redirect(redirectUrl)
     }
@@ -27,16 +27,16 @@ export async function GET(request: NextRequest) {
     })
 
     if (!user) {
-      console.log('❌ User not found for token')
+      
       const redirectUrl = getRedirectUrl(request, '/login?error=invalid_token')
       return NextResponse.redirect(redirectUrl)
     }
 
-    console.log('✅ User found:', { userId: user.id, email: user.email })
+    
 
     // Проверка истечения токена
     if (user.verificationTokenExpiry && isTokenExpired(user.verificationTokenExpiry)) {
-      console.log('❌ Token expired:', user.verificationTokenExpiry)
+      
       const redirectUrl = getRedirectUrl(request, '/login?error=token_expired')
       return NextResponse.redirect(redirectUrl)
     }
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
       },
     })
 
-    console.log('✅ Email verified successfully for user:', user.email)
+    
 
     // Генерируем JWT токены для автоматического входа
     const accessToken = generateAccessToken({
@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
       nickname: user.nickname,
     })
 
-    console.log('🔑 JWT tokens generated, logging in user automatically')
+    
 
     // Создаем ответ с редиректом
     const redirectUrl = getRedirectUrl(request, '/?email_verified=true')
@@ -89,7 +89,7 @@ export async function GET(request: NextRequest) {
       path: '/',
     })
 
-    console.log('✅ User auto-logged in after email verification')
+    
 
     return response
   } catch (error) {
@@ -113,7 +113,7 @@ function getRedirectUrl(request: NextRequest, path: string): URL {
                   process.env.NEXT_PUBLIC_APP_URL || 
                   `${protocol}://${host}`
   
-  console.log('🔗 Redirect URL info:', { baseUrl, path, host, protocol })
+  
   
   return new URL(path, baseUrl)
 }

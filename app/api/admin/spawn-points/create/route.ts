@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { shardId, latitude, longitude, radius, expiresAt } = body
 
-    console.log('📍 Создание spawn point:', { shardId, latitude, longitude, radius })
+    
 
     if (!shardId || latitude === undefined || longitude === undefined) {
       return NextResponse.json(
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log('✅ Shard найден:', shard.label, 'для карты:', shard.card.name)
+    
 
     // Создаём точку спавна в БД
     const spawnPoint = await createSpawnPoint({
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       expiresAt: expiresAt ? new Date(expiresAt) : undefined
     })
 
-    console.log('✅ Точка спавна создана:', spawnPoint)
+    
 
     return NextResponse.json({
       success: true,
