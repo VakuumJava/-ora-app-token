@@ -27,12 +27,6 @@ export async function POST(request: NextRequest) {
     // Передаем карту
     const toUser = await transferCard(cardId, fromUser.id, cleanUsername)
 
-    
-      cardId,
-      from: fromUser.nickname,
-      to: toUser.nickname
-    })
-
     return NextResponse.json({
       success: true,
       message: `✅ Карта успешно передана пользователю @${toUser.nickname}!`

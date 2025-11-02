@@ -8,11 +8,6 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams
     const token = searchParams.get('token')
 
-    
-      token: token ? `${token.substring(0, 10)}...` : 'missing',
-      url: request.url 
-    })
-
     if (!token) {
       
       const redirectUrl = getRedirectUrl(request, '/login?error=invalid_token')

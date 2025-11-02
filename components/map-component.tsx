@@ -127,7 +127,7 @@ export default function MapComponent({ setSelectedFragment, spawnPoints, isLoadi
             (position) => {
               setUserLocation([position.coords.latitude, position.coords.longitude])
             },
-            (err) => 
+            (err) => console.error(err),
             { 
               enableHighAccuracy: false,
               timeout: 15000,

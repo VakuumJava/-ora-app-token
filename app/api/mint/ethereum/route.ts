@@ -101,14 +101,6 @@ export async function POST(request: Request) {
             value: ethers.parseEther('0.01').toString(), // 0.01 ETH mint fee
         };
 
-        
-            contract: contractAddress,
-            recipient: walletAddress,
-            cardId,
-            cardName: userCard.card.name,
-            rarity: userCard.card.rarity,
-        });
-
         // Return transaction data for MetaMask/WalletConnect to sign
         return NextResponse.json({
             success: true,
@@ -165,13 +157,6 @@ export async function PUT(request: Request) {
 
         // Delete card from database (it's now in blockchain!)
         await deleteCardAfterMint(cardId, tokenId || null, txHash);
-
-        
-        
-            cardId,
-            txHash,
-            explorer: `https://etherscan.io/tx/${txHash}`,
-        });
 
         return NextResponse.json({
             success: true,

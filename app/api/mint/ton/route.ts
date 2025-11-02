@@ -135,14 +135,6 @@ export async function POST(request: Request) {
             ]
         };
 
-        
-            collection: collectionAddress,
-            recipient: walletAddress,
-            cardId,
-            cardName: userCard.card.name,
-            rarity: userCard.card.rarity,
-        });
-
         // Return transaction data for TonConnect to sign
         return NextResponse.json({
             success: true,
@@ -199,13 +191,6 @@ export async function PUT(request: Request) {
 
         // Delete card from database (it's now in blockchain!)
         await deleteCardAfterMint(cardId, tokenId || null, txHash);
-        
-        
-        
-            cardId,
-            txHash,
-            explorer: `https://tonscan.org/tx/${txHash}`,
-        });
 
         return NextResponse.json({
             success: true,

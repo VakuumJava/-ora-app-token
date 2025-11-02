@@ -13,11 +13,6 @@ export async function POST(request: NextRequest) {
     const token = request.cookies.get('access_token')?.value || 
                   request.cookies.get('accessToken')?.value
 
-    
-      hasToken: !!token,
-      cookies: request.cookies.getAll().map(c => c.name)
-    })
-
     if (!token) {
       return NextResponse.json({ error: 'Не авторизован' }, { status: 401 })
     }

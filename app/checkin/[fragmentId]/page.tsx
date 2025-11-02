@@ -75,13 +75,6 @@ export default function CheckInPage() {
         // Calculate distance to fragment
         const dist = calculateDistance(newLocation.lat, newLocation.lng, fragment.lat, fragment.lng)
         setDistance(dist)
-
-        
-          userLat: newLocation.lat,
-          userLng: newLocation.lng,
-          accuracy: newLocation.accuracy,
-          distance: dist,
-        })
       },
       (error) => {
         console.error("[v0] Geolocation error:", error)

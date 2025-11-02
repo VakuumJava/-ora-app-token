@@ -12,11 +12,6 @@ export async function DELETE(request: NextRequest) {
     const token = request.cookies.get('access_token')?.value || 
                   request.cookies.get('accessToken')?.value
 
-    
-      hasToken: !!token,
-      cookies: request.cookies.getAll().map(c => c.name)
-    })
-
     if (!token) {
       return NextResponse.json({ error: 'Не авторизован' }, { status: 401 })
     }
@@ -27,8 +22,6 @@ export async function DELETE(request: NextRequest) {
       
       return NextResponse.json({ error: 'Невалидный токен' }, { status: 401 })
     }
-
-    
 
     const userId = payload.userId
 
@@ -65,8 +58,6 @@ export async function DELETE(request: NextRequest) {
     response.cookies.delete('refresh_token')
     response.cookies.delete('accessToken')
     response.cookies.delete('refreshToken')
-
-    
 
     return response
   } catch (error) {
